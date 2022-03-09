@@ -1,0 +1,10 @@
+# dependencies
+/node_modules
+
+# compilation
+/artifacts
+/cache
+
+# misc
+.env
+.npmrc
