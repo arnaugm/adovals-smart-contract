@@ -1,15 +1,18 @@
+/* eslint-disable no-console */
+const { ethers } = require('hardhat');
+
 async function main() {
-  const Adovals = await ethers.getContractFactory("Adovals")
+  const Adovals = await ethers.getContractFactory('Adovals');
 
   // Start deployment, returning a promise that resolves to a contract object
-  const adovals = await Adovals.deploy()
-  await adovals.deployed()
-  console.log("Contract deployed to address:", adovals.address)
+  const adovals = await Adovals.deploy();
+  await adovals.deployed();
+  console.log('Contract deployed to address:', adovals.address);
 }
 
 main()
-.then(() => process.exit(0))
-.catch((error) => {
-  console.error(error)
-  process.exit(1)
-})
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
