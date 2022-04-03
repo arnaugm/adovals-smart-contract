@@ -2,71 +2,83 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract Adovals is ERC721URIStorage, Ownable {
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
+    bool public enabled = false;
+    bool public inPresale = true;
+    uint256 public totalSupply = 0;
+    uint256 public maxSupply = 1500;
+    uint256 public presaleMaxMintAmount = 2;
+    uint256 public saleMaxMintAmount = 10;
+    uint256 public presaleCost = 0.03 ether;
+    uint256 public cost = 0.04 ether;
 
-    bool public enabled;
-    bool public inPresale;
+    constructor(string memory name, string memory symbol)
+        ERC721(name, symbol)
+    {}
 
-    constructor() ERC721("Adovals", "ADV") {
-        enabled = false;
-        inPresale = true;
+    function mint(uint256 mintAmount) public payable {
+        require(enabled, "The contract is not enabled");
+        require(
+            mintAmount > 0,
+            "A mint amount bigger than 0 needs to be provided"
+        );
+        require(
+            mintAmount <= presaleMaxMintAmount,
+            "The mint amount is bigger than the maximum"
+        );
+        require(
+            totalSupply + mintAmount <= maxSupply,
+            "There are not enough tokens left"
+        );
+
+        if (msg.sender != owner()) {
+            require(
+                msg.value >= presaleCost * mintAmount,
+                "Not enough ether is sent for the purchase"
+            );
+        }
+
+        uint256 currentSupply = totalSupply;
+        totalSupply = totalSupply + mintAmount;
+        for (uint256 i = 1; i <= mintAmount; i++) {
+            _safeMint(msg.sender, currentSupply + i);
+        }
+    }
+
+    function enable(bool setEnabled) public onlyOwner {
+        enabled = setEnabled;
     }
 
     function presale(bool setPresale) public onlyOwner {
         inPresale = setPresale;
     }
 
-    function mint(address recipient, string memory tokenURI)
-    public onlyOwner
-    returns (uint256)
+    function setMaxSupply(uint256 newMaxSupply) public onlyOwner {
+        maxSupply = newMaxSupply;
+    }
+
+    function setPresaleMaxMintAmount(uint256 newPresaleMaxMintAmount)
+        public
+        onlyOwner
     {
-        _tokenIds.increment();
+        presaleMaxMintAmount = newPresaleMaxMintAmount;
+    }
 
-        uint256 newItemId = _tokenIds.current();
-        _mint(recipient, newItemId);
-        _setTokenURI(newItemId, tokenURI);
+    function setSaleMaxMintAmount(uint256 newSaleMaxMintAmount)
+        public
+        onlyOwner
+    {
+        saleMaxMintAmount = newSaleMaxMintAmount;
+    }
 
-        return newItemId;
+    function setPresaleCost(uint256 newPresaleCost) public onlyOwner {
+        presaleCost = newPresaleCost;
+    }
+
+    function setCost(uint256 newCost) public onlyOwner {
+        cost = newCost;
     }
 }
-
-
-//1500 tokens:
-//1280 public
-//100 presale
-//100 giveaways
-//10 creators
-//10 especials per subasta
-//
-//
-//- Primer es fa Whitelist, els primers 100 que entren es farà presale a un preu menor.
-//
-//- Es comença presale i es deixa una setmana per mintejar.
-//
-//- Els tokens reservats per presale que no s’hagin mintejat tornaran a la venta pública quan el temps de presale s’hagi acabat.
-//
-//- Durant el presale es poden mintejar 2 tokens màxim per persona. Al cap d’uns dies 10 màxim per persona.
-//
-//- El minting públic comença un o dos dies després del final del presale.
-//
-//- Els 1490 que no es mintegin en ordre, que vagin sortint números de tokens random.
-//
-//- Durant el minting públic, es poden mintejar 10 tokens per transacció i només es poden tenir 10 tokens per wallet.
-//
-//- Els tokens del presale costaràn 0.03ETH i al mint públic 0.04ETH
-//
-//- S’aplicarà un 7,5% de resale fee (royalties per l’artista) en cada venta secundària.
-//
-//- Només s’accepta Metamask.
-//
-//- Vigilar el tema del gas fee durant el presale i després. Mirar lo dels nivells del gas fee.
-//
-//- Poder utilitzar els 100 reservats per giveaways per quan es vulgui fer donacions, subastes, regals, etc.
-//
-//- Quan s’hagin mintejat els 1490 fer subasta del 10 especials.
