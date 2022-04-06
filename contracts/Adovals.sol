@@ -9,6 +9,7 @@ contract Adovals is ERC721URIStorage, Ownable {
     bool public enabled = false;
     bool public inPresale = true;
     uint256 public totalSupply = 0;
+    uint256 public presaleMaxSupply = 100;
     uint256 public maxSupply = 1500;
     uint256 public presaleMaxMintAmount = 2;
     uint256 public saleMaxMintAmount = 10;
@@ -26,8 +27,20 @@ contract Adovals is ERC721URIStorage, Ownable {
             "A mint amount bigger than 0 needs to be provided"
         );
         require(
-            mintAmount <= presaleMaxMintAmount,
+            (inPresale && mintAmount <= presaleMaxMintAmount) ||
+                (!inPresale && mintAmount <= saleMaxMintAmount),
             "The mint amount is bigger than the maximum"
+        );
+        require(
+            (inPresale &&
+                balanceOf(msg.sender) + mintAmount <= presaleMaxMintAmount) ||
+                (!inPresale &&
+                    balanceOf(msg.sender) + mintAmount <= saleMaxMintAmount),
+            "The total mint amount for the account is bigger than the maximum"
+        );
+        require(
+            !inPresale || totalSupply + mintAmount <= presaleMaxSupply,
+            "There are not enough presale tokens left"
         );
         require(
             totalSupply + mintAmount <= maxSupply,
@@ -54,6 +67,10 @@ contract Adovals is ERC721URIStorage, Ownable {
 
     function presale(bool setPresale) public onlyOwner {
         inPresale = setPresale;
+    }
+
+    function setPresaleMaxSupply(uint256 newPresaleMaxSupply) public onlyOwner {
+        presaleMaxSupply = newPresaleMaxSupply;
     }
 
     function setMaxSupply(uint256 newMaxSupply) public onlyOwner {
