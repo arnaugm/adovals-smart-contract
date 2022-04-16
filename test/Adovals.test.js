@@ -6,11 +6,12 @@ describe('Adovals contract', () => {
   let hardhatToken;
   let owner;
   let addr1;
+  let addr2;
 
   beforeEach(async () => {
     // Get the ContractFactory and Signers here.
     Adovals = await ethers.getContractFactory('Adovals');
-    [owner, addr1] = await ethers.getSigners();
+    [owner, addr1, addr2] = await ethers.getSigners();
 
     // To deploy our contract, we just have to call deploy() and await
     // for it to be deployed(), which happens once its transaction has been
@@ -117,7 +118,10 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
       hardhatToken.presale(false);
 
-      await expect(hardhatToken.mint(5)).not.to.be.reverted;
+      const tx = hardhatToken.mint(5);
+      console.log(`Gas used: ${tx.receipt.gasUsed}`);
+
+      await expect(tx).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(5);
     });
 
@@ -170,6 +174,35 @@ describe('Adovals contract', () => {
       await expect(hardhatToken.mint(2)).not.to.be.reverted;
     });
 
+    it('should mint if total tokens minted is above presale limit but non owner mints is below the limit', async () => {
+      hardhatToken.setPresaleMaxSupply(3);
+      hardhatToken.enable(true);
+      hardhatToken.presale(true);
+
+      hardhatToken.mint(2);
+      await expect(
+        hardhatToken
+          .connect(addr1)
+          .mint(2, { value: ethers.utils.parseEther('0.06') }),
+      ).not.to.be.reverted;
+    });
+
+    it('should not mint if total tokens minted is above presale limit and non owner mints is also above the limit', async () => {
+      hardhatToken.setPresaleMaxSupply(3);
+      hardhatToken.enable(true);
+      hardhatToken.presale(true);
+
+      hardhatToken.mint(2);
+      hardhatToken
+        .connect(addr1)
+        .mint(2, { value: ethers.utils.parseEther('0.06') });
+      await expect(
+        hardhatToken
+          .connect(addr2)
+          .mint(2, { value: ethers.utils.parseEther('0.06') }),
+      ).to.be.revertedWith('There are not enough presale tokens left');
+    });
+
     it('should not mint if no ether is sent for the purchase', async () => {
       hardhatToken.enable(true);
 
@@ -204,6 +237,30 @@ describe('Adovals contract', () => {
           .connect(addr1)
           .mint(2, { value: ethers.utils.parseEther('0.06') }),
       ).not.to.be.reverted;
+    });
+
+    it('should not count owner mints as presale mints', async () => {
+      hardhatToken.enable(true);
+      hardhatToken.presale(true);
+
+      expect(await hardhatToken.totalPresaleSupply()).to.equal(0);
+      await expect(
+        hardhatToken.mint(2, { value: ethers.utils.parseEther('0.06') }),
+      ).not.to.be.reverted;
+      expect(await hardhatToken.totalPresaleSupply()).to.equal(0);
+    });
+
+    it('should count user mints as presale mints', async () => {
+      hardhatToken.enable(true);
+      hardhatToken.presale(true);
+
+      expect(await hardhatToken.totalPresaleSupply()).to.equal(0);
+      await expect(
+        hardhatToken
+          .connect(addr1)
+          .mint(2, { value: ethers.utils.parseEther('0.06') }),
+      ).not.to.be.reverted;
+      expect(await hardhatToken.totalPresaleSupply()).to.equal(2);
     });
   });
 

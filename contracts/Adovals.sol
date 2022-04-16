@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 contract Adovals is ERC721URIStorage, Ownable {
     bool public enabled = false;
     bool public inPresale = true;
+    uint256 public totalPresaleSupply = 0;
     uint256 public totalSupply = 0;
     uint256 public presaleMaxSupply = 100;
     uint256 public maxSupply = 1500;
@@ -39,7 +40,7 @@ contract Adovals is ERC721URIStorage, Ownable {
             "The total mint amount for the account is bigger than the maximum"
         );
         require(
-            !inPresale || totalSupply + mintAmount <= presaleMaxSupply,
+            !inPresale || totalPresaleSupply + mintAmount <= presaleMaxSupply,
             "There are not enough presale tokens left"
         );
         require(
@@ -56,6 +57,9 @@ contract Adovals is ERC721URIStorage, Ownable {
 
         uint256 currentSupply = totalSupply;
         totalSupply = totalSupply + mintAmount;
+        if (inPresale && msg.sender != owner()) {
+            totalPresaleSupply = totalPresaleSupply + mintAmount;
+        }
         for (uint256 i = 1; i <= mintAmount; i++) {
             _safeMint(msg.sender, currentSupply + i);
         }
