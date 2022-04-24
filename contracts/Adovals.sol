@@ -70,7 +70,9 @@ contract Adovals is ERC721URIStorage, Ownable {
     }
 
     function withdraw() public onlyOwner {
-        (bool success, ) = payable(owner()).call{value: address(this).balance}("");
+        (bool success, ) = payable(owner()).call{value: address(this).balance}(
+            ""
+        );
         require(success);
     }
 
