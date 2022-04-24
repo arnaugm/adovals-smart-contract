@@ -28,27 +28,31 @@ contract Adovals is ERC721URIStorage, Ownable {
             "A mint amount bigger than 0 needs to be provided"
         );
         require(
-            (inPresale && mintAmount <= presaleMaxMintAmount) ||
-                (!inPresale && mintAmount <= saleMaxMintAmount),
-            "The mint amount is bigger than the maximum"
-        );
-        require(
-            (inPresale &&
-                balanceOf(msg.sender) + mintAmount <= presaleMaxMintAmount) ||
-                (!inPresale &&
-                    balanceOf(msg.sender) + mintAmount <= saleMaxMintAmount),
-            "The total mint amount for the account is bigger than the maximum"
-        );
-        require(
-            !inPresale || totalPresaleSupply + mintAmount <= presaleMaxSupply,
-            "There are not enough presale tokens left"
-        );
-        require(
             totalSupply + mintAmount <= maxSupply,
             "There are not enough tokens left"
         );
 
         if (msg.sender != owner()) {
+            require(
+                (inPresale && mintAmount <= presaleMaxMintAmount) ||
+                    (!inPresale && mintAmount <= saleMaxMintAmount),
+                "The mint amount is bigger than the maximum"
+            );
+            require(
+                (inPresale &&
+                    balanceOf(msg.sender) + mintAmount <=
+                    presaleMaxMintAmount) ||
+                    (!inPresale &&
+                        balanceOf(msg.sender) + mintAmount <=
+                        saleMaxMintAmount),
+                "The total mint amount for the account is bigger than the maximum"
+            );
+            require(
+                !inPresale ||
+                    totalPresaleSupply + mintAmount <= presaleMaxSupply,
+                "There are not enough presale tokens left"
+            );
+
             require(
                 msg.value >= presaleCost * mintAmount,
                 "Not enough ether is sent for the purchase"
@@ -63,6 +67,11 @@ contract Adovals is ERC721URIStorage, Ownable {
         for (uint256 i = 1; i <= mintAmount; i++) {
             _safeMint(msg.sender, currentSupply + i);
         }
+    }
+
+    function withdraw() public onlyOwner {
+        (bool success, ) = payable(owner()).call{value: address(this).balance}("");
+        require(success);
     }
 
     function enable(bool setEnabled) public onlyOwner {
