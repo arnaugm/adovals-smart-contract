@@ -14,7 +14,11 @@ describe('Adovals contract', () => {
     Adovals = await ethers.getContractFactory('Adovals');
     [owner, addr1, addr2] = await ethers.getSigners();
 
-    hardhatToken = await Adovals.deploy('Adovals', 'ADV');
+    hardhatToken = await Adovals.deploy(
+      'Adovals',
+      'ADV',
+      'ipf://base-url.com/',
+    );
   });
 
   describe('Deployment', () => {
@@ -32,6 +36,13 @@ describe('Adovals contract', () => {
   });
 
   describe('Initial state', () => {
+    it('should set the base URI of the tokens', async () => {
+      hardhatToken.enable(true);
+      hardhatToken.mint(1);
+
+      expect(await hardhatToken.tokenURI(1)).to.equal('ipf://base-url.com/1');
+    });
+
     it('should set the contract as not enabled', async () => {
       expect(await hardhatToken.enabled()).to.equal(false);
     });
@@ -74,6 +85,28 @@ describe('Adovals contract', () => {
       expect(await hardhatToken.cost()).to.equal(
         ethers.utils.parseEther('0.04'),
       );
+    });
+  });
+
+  describe('#setBaseURI', () => {
+    it('should change the base URI of the tokens', async () => {
+      hardhatToken.setBaseURI('http://new-url.com/');
+
+      hardhatToken.enable(true);
+      hardhatToken.mint(1);
+
+      expect(await hardhatToken.tokenURI(1)).to.equal('http://new-url.com/1');
+    });
+
+    it('should not change the base URI of the tokens if the caller is not the owner', async () => {
+      await expect(
+        hardhatToken.connect(addr1).setBaseURI('http://new-url.com/'),
+      ).to.be.reverted;
+
+      hardhatToken.enable(true);
+      hardhatToken.mint(1);
+
+      expect(await hardhatToken.tokenURI(1)).to.equal('ipf://base-url.com/1');
     });
   });
 

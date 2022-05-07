@@ -5,7 +5,10 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
-contract Adovals is ERC721URIStorage, Ownable {
+contract Adovals is ERC721, Ownable {
+    using Strings for uint256;
+
+    string baseURI;
     bool public enabled = false;
     bool public inPresale = true;
     uint256 public totalPresaleSupply = 0;
@@ -17,9 +20,17 @@ contract Adovals is ERC721URIStorage, Ownable {
     uint256 public presaleCost = 0.03 ether;
     uint256 public cost = 0.04 ether;
 
-    constructor(string memory name, string memory symbol)
-        ERC721(name, symbol)
-    {}
+    constructor(
+        string memory name,
+        string memory symbol,
+        string memory initBaseURI
+    ) ERC721(name, symbol) {
+        setBaseURI(initBaseURI);
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return baseURI;
+    }
 
     function mint(uint256 mintAmount) public payable {
         require(enabled, "The contract is not enabled");
@@ -74,6 +85,10 @@ contract Adovals is ERC721URIStorage, Ownable {
             ""
         );
         require(success);
+    }
+
+    function setBaseURI(string memory newBaseURI) public onlyOwner {
+        baseURI = newBaseURI;
     }
 
     function enable(bool setEnabled) public onlyOwner {
