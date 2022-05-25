@@ -10,7 +10,9 @@ module.exports = {
   solidity: '0.8.1',
   defaultNetwork: 'hardhat',
   networks: {
-    hardhat: {},
+    hardhat: {
+      chainId: 1337,
+    },
     ropsten: {
       url: API_URL,
       accounts: [`0x${PRIVATE_KEY}`],

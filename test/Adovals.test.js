@@ -1,6 +1,8 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
+const { MerkleTree } = require('merkletreejs');
+const keccak256 = require('keccak256');
 
 describe('Adovals contract', () => {
   let Adovals;
@@ -9,15 +11,72 @@ describe('Adovals contract', () => {
   let owner;
   let addr1;
   let addr2;
+  let addr3;
+  let addr4;
+  let addr5;
+  let addr6;
+  let addr7;
+  let notWhitelistedAddr;
+  let whitelist;
+  let ownerWhitelist;
+  let merkleTree;
+  let ownerMerkleTree;
+  let merkleRoot;
+  let ownerMerkleRoot;
+  let addr1Proof;
+  let addr2Proof;
+  let ownerAddrProof;
+
+  before(async () => {
+    const generateMerkleTrees = (addresses) => {
+      const leaves = addresses.map((addr) => keccak256(addr));
+
+      merkleTree = new MerkleTree(leaves.slice(1), keccak256, {
+        sortPairs: true,
+      });
+      ownerMerkleTree = new MerkleTree(leaves, keccak256, { sortPairs: true });
+
+      merkleRoot = `0x${merkleTree.getRoot().toString('hex')}`;
+      ownerMerkleRoot = `0x${ownerMerkleTree.getRoot().toString('hex')}`;
+    };
+
+    Adovals = await ethers.getContractFactory('Adovals');
+    [
+      owner,
+      addr1,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      notWhitelistedAddr,
+    ] = await ethers.getSigners();
+
+    whitelist = [
+      addr1.address,
+      addr2.address,
+      addr3.address,
+      addr4.address,
+      addr5.address,
+      addr6.address,
+      addr7.address,
+    ];
+    ownerWhitelist = [owner.address, ...whitelist];
+
+    generateMerkleTrees(ownerWhitelist);
+
+    addr1Proof = merkleTree.getHexProof(keccak256(addr1.address));
+    addr2Proof = merkleTree.getHexProof(keccak256(addr2.address));
+    ownerAddrProof = ownerMerkleTree.getHexProof(keccak256(owner.address));
+  });
 
   beforeEach(async () => {
-    Adovals = await ethers.getContractFactory('Adovals');
-    [owner, addr1, addr2] = await ethers.getSigners();
-
     hardhatToken = await Adovals.deploy(
       'Adovals',
       'ADV',
       'ipf://base-url.com/',
+      merkleRoot,
     );
   });
 
@@ -33,12 +92,16 @@ describe('Adovals contract', () => {
     it('should set the right symbol', async () => {
       expect(await hardhatToken.symbol()).to.equal('ADV');
     });
+
+    it('should set the right Merkle root', async () => {
+      expect(await hardhatToken.merkleRoot()).to.equal(merkleRoot);
+    });
   });
 
   describe('Initial state', () => {
     it('should set the base URI of the tokens', async () => {
       hardhatToken.enable(true);
-      hardhatToken.mint(1);
+      hardhatToken.mint(1, []);
 
       expect(await hardhatToken.tokenURI(1)).to.equal('ipf://base-url.com/1');
     });
@@ -93,7 +156,7 @@ describe('Adovals contract', () => {
       hardhatToken.setBaseURI('http://new-url.com/');
 
       hardhatToken.enable(true);
-      hardhatToken.mint(1);
+      hardhatToken.mint(1, []);
 
       expect(await hardhatToken.tokenURI(1)).to.equal('http://new-url.com/1');
     });
@@ -104,7 +167,7 @@ describe('Adovals contract', () => {
       ).to.be.reverted;
 
       hardhatToken.enable(true);
-      hardhatToken.mint(1);
+      hardhatToken.mint(1, []);
 
       expect(await hardhatToken.tokenURI(1)).to.equal('ipf://base-url.com/1');
     });
@@ -233,6 +296,23 @@ describe('Adovals contract', () => {
     });
   });
 
+  describe('#setMerkleRoot', () => {
+    const newMerkleRoot =
+      '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+
+    it('should set the Merkle root value', async () => {
+      hardhatToken.setMerkleRoot(newMerkleRoot);
+
+      expect(await hardhatToken.merkleRoot()).to.equal(newMerkleRoot);
+    });
+
+    it('should not set the Merkle root value if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).setMerkleRoot(newMerkleRoot)).to
+        .be.reverted;
+      expect(await hardhatToken.merkleRoot()).to.equal(merkleRoot);
+    });
+  });
+
   describe('#mint', () => {
     beforeEach(async () => {
       tokenNoOwner = hardhatToken.connect(addr1);
@@ -240,7 +320,7 @@ describe('Adovals contract', () => {
 
     it('should not mint if the contract is not enabled', async () => {
       await expect(
-        tokenNoOwner.mint(2, { value: ethers.utils.parseEther('0.08') }),
+        tokenNoOwner.mint(2, [], { value: ethers.utils.parseEther('0.08') }),
       ).to.be.revertedWith('The contract is not enabled');
     });
 
@@ -250,12 +330,97 @@ describe('Adovals contract', () => {
       await expect(tokenNoOwner.mint()).to.be.reverted;
     });
 
+    it('should not mint if the merkle proof is not provided', async () => {
+      hardhatToken.enable(true);
+
+      await expect(tokenNoOwner.mint(2)).to.be.reverted;
+    });
+
     it('should not mint if the amount is 0', async () => {
       hardhatToken.enable(true);
 
-      await expect(tokenNoOwner.mint(0)).to.be.revertedWith(
+      await expect(tokenNoOwner.mint(0, [])).to.be.revertedWith(
         'A mint amount bigger than 0 needs to be provided',
       );
+    });
+
+    describe('address not whitelisted', () => {
+      let tokenNotWhitelisted;
+      let notWhitelistedProof;
+
+      beforeEach(async () => {
+        tokenNotWhitelisted = hardhatToken.connect(notWhitelistedAddr);
+        const leaf = keccak256(notWhitelistedAddr.address);
+        notWhitelistedProof = merkleTree.getHexProof(leaf);
+      });
+
+      it('should not mint if in presale and the address is not whitelisted', async () => {
+        hardhatToken.enable(true);
+        hardhatToken.presale(true);
+
+        await expect(
+          tokenNotWhitelisted.mint(2, notWhitelistedProof, {
+            value: ethers.utils.parseEther('0.08'),
+          }),
+        ).to.be.revertedWith(
+          'The used address is not in the presale whitelist',
+        );
+      });
+
+      it('should mint if not in presale and the address is not whitelisted', async () => {
+        hardhatToken.enable(true);
+        hardhatToken.presale(false);
+
+        await expect(
+          tokenNotWhitelisted.mint(2, notWhitelistedProof, {
+            value: ethers.utils.parseEther('0.08'),
+          }),
+        ).not.to.be.reverted;
+      });
+    });
+
+    it('should mint if in presale and the address is whitelisted', async () => {
+      hardhatToken.enable(true);
+      hardhatToken.presale(true);
+
+      await expect(
+        tokenNoOwner.mint(2, addr1Proof, {
+          value: ethers.utils.parseEther('0.08'),
+        }),
+      ).not.to.be.reverted;
+    });
+
+    it('should mint if not in presale and the address is whitelisted', async () => {
+      hardhatToken.enable(true);
+      hardhatToken.presale(false);
+
+      await expect(
+        tokenNoOwner.mint(2, [], {
+          value: ethers.utils.parseEther('0.08'),
+        }),
+      ).not.to.be.reverted;
+    });
+
+    it('should not mint if in presale and empty proof is provided', async () => {
+      hardhatToken.enable(true);
+      hardhatToken.presale(true);
+
+      await expect(
+        tokenNoOwner.mint(2, [], {
+          value: ethers.utils.parseEther('0.08'),
+        }),
+      ).to.be.revertedWith('The used address is not in the presale whitelist');
+    });
+
+    it('should mint if not in presale and empty proof is provided', async () => {
+      hardhatToken.enable(true);
+      hardhatToken.presale(false);
+
+      await expect(
+        tokenNoOwner.mint(2, [], {
+          value: ethers.utils.parseEther('0.08'),
+        }),
+      ).not.to.be.reverted;
     });
 
     it('should not mint if the mint amount is bigger than the max permitted in presale', async () => {
@@ -263,7 +428,9 @@ describe('Adovals contract', () => {
       hardhatToken.presale(true);
 
       await expect(
-        tokenNoOwner.mint(3, { value: ethers.utils.parseEther('0.12') }),
+        tokenNoOwner.mint(3, addr1Proof, {
+          value: ethers.utils.parseEther('0.12'),
+        }),
       ).to.be.revertedWith('The mint amount is bigger than the maximum');
     });
 
@@ -272,7 +439,7 @@ describe('Adovals contract', () => {
       hardhatToken.presale(false);
 
       await expect(
-        tokenNoOwner.mint(11, { value: ethers.utils.parseEther('0.44') }),
+        tokenNoOwner.mint(11, [], { value: ethers.utils.parseEther('0.44') }),
       ).to.be.revertedWith('The mint amount is bigger than the maximum');
     });
 
@@ -281,7 +448,7 @@ describe('Adovals contract', () => {
       hardhatToken.presale(false);
 
       await expect(
-        tokenNoOwner.mint(5, { value: ethers.utils.parseEther('0.20') }),
+        tokenNoOwner.mint(5, [], { value: ethers.utils.parseEther('0.20') }),
       ).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(5);
     });
@@ -291,10 +458,14 @@ describe('Adovals contract', () => {
       hardhatToken.presale(true);
 
       await expect(
-        tokenNoOwner.mint(2, { value: ethers.utils.parseEther('0.08') }),
+        tokenNoOwner.mint(2, addr1Proof, {
+          value: ethers.utils.parseEther('0.08'),
+        }),
       ).not.to.be.reverted;
       await expect(
-        tokenNoOwner.mint(1, { value: ethers.utils.parseEther('0.04') }),
+        tokenNoOwner.mint(1, addr1Proof, {
+          value: ethers.utils.parseEther('0.04'),
+        }),
       ).to.be.revertedWith(
         'The total mint amount for the account is bigger than the maximum',
       );
@@ -305,10 +476,10 @@ describe('Adovals contract', () => {
       hardhatToken.presale(false);
 
       await expect(
-        tokenNoOwner.mint(10, { value: ethers.utils.parseEther('0.40') }),
+        tokenNoOwner.mint(10, [], { value: ethers.utils.parseEther('0.40') }),
       ).not.to.be.reverted;
       await expect(
-        tokenNoOwner.mint(1, { value: ethers.utils.parseEther('0.04') }),
+        tokenNoOwner.mint(1, [], { value: ethers.utils.parseEther('0.04') }),
       ).to.be.revertedWith(
         'The total mint amount for the account is bigger than the maximum',
       );
@@ -320,7 +491,7 @@ describe('Adovals contract', () => {
       hardhatToken.presale(false);
 
       await expect(
-        tokenNoOwner.mint(2, { value: ethers.utils.parseEther('0.08') }),
+        tokenNoOwner.mint(2, [], { value: ethers.utils.parseEther('0.08') }),
       ).to.be.revertedWith('There are not enough tokens left');
     });
 
@@ -330,7 +501,9 @@ describe('Adovals contract', () => {
       hardhatToken.presale(true);
 
       await expect(
-        tokenNoOwner.mint(2, { value: ethers.utils.parseEther('0.08') }),
+        tokenNoOwner.mint(2, addr1Proof, {
+          value: ethers.utils.parseEther('0.08'),
+        }),
       ).to.be.revertedWith('There are not enough presale tokens left');
     });
 
@@ -341,7 +514,7 @@ describe('Adovals contract', () => {
       hardhatToken.presale(false);
 
       await expect(
-        tokenNoOwner.mint(2, { value: ethers.utils.parseEther('0.08') }),
+        tokenNoOwner.mint(2, [], { value: ethers.utils.parseEther('0.08') }),
       ).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(2);
     });
@@ -351,9 +524,11 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
       hardhatToken.presale(true);
 
-      hardhatToken.mint(2);
+      hardhatToken.mint(2, []);
       await expect(
-        tokenNoOwner.mint(2, { value: ethers.utils.parseEther('0.06') }),
+        tokenNoOwner.mint(2, addr1Proof, {
+          value: ethers.utils.parseEther('0.06'),
+        }),
       ).not.to.be.reverted;
     });
 
@@ -362,19 +537,21 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
       hardhatToken.presale(true);
 
-      hardhatToken.mint(2);
-      tokenNoOwner.mint(2, { value: ethers.utils.parseEther('0.06') });
+      hardhatToken.mint(2, []);
+      tokenNoOwner.mint(2, addr1Proof, {
+        value: ethers.utils.parseEther('0.06'),
+      });
       await expect(
         hardhatToken
           .connect(addr2)
-          .mint(2, { value: ethers.utils.parseEther('0.06') }),
+          .mint(2, addr2Proof, { value: ethers.utils.parseEther('0.06') }),
       ).to.be.revertedWith('There are not enough presale tokens left');
     });
 
     it('should not mint if no ether is sent for the purchase', async () => {
       hardhatToken.enable(true);
 
-      await expect(tokenNoOwner.mint(2)).to.be.revertedWith(
+      await expect(tokenNoOwner.mint(2, addr1Proof)).to.be.revertedWith(
         'Not enough ether is sent for the purchase',
       );
     });
@@ -383,7 +560,9 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
 
       await expect(
-        tokenNoOwner.mint(2, { value: ethers.utils.parseEther('0.01') }),
+        tokenNoOwner.mint(2, addr1Proof, {
+          value: ethers.utils.parseEther('0.01'),
+        }),
       ).to.be.revertedWith('Not enough ether is sent for the purchase');
     });
 
@@ -391,7 +570,9 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
 
       await expect(
-        tokenNoOwner.mint(2, { value: ethers.utils.parseEther('0.06') }),
+        tokenNoOwner.mint(2, addr1Proof, {
+          value: ethers.utils.parseEther('0.06'),
+        }),
       ).not.to.be.reverted;
     });
 
@@ -401,7 +582,9 @@ describe('Adovals contract', () => {
 
       expect(await hardhatToken.totalPresaleSupply()).to.equal(0);
       await expect(
-        tokenNoOwner.mint(2, { value: ethers.utils.parseEther('0.06') }),
+        tokenNoOwner.mint(2, addr1Proof, {
+          value: ethers.utils.parseEther('0.06'),
+        }),
       ).not.to.be.reverted;
       expect(await hardhatToken.totalPresaleSupply()).to.equal(2);
     });
@@ -409,7 +592,7 @@ describe('Adovals contract', () => {
 
   describe('#mint owner', () => {
     it('should not mint if the contract is not enabled', async () => {
-      await expect(hardhatToken.mint(2)).to.be.revertedWith(
+      await expect(hardhatToken.mint(2, [])).to.be.revertedWith(
         'The contract is not enabled',
       );
     });
@@ -420,19 +603,114 @@ describe('Adovals contract', () => {
       await expect(hardhatToken.mint()).to.be.reverted;
     });
 
+    it('should not mint if the merkle proof is not provided', async () => {
+      hardhatToken.enable(true);
+
+      await expect(hardhatToken.mint(2)).to.be.reverted;
+    });
+
     it('should not mint if the amount is 0', async () => {
       hardhatToken.enable(true);
 
-      await expect(hardhatToken.mint(0)).to.be.revertedWith(
+      await expect(hardhatToken.mint(0, [])).to.be.revertedWith(
         'A mint amount bigger than 0 needs to be provided',
       );
+    });
+
+    describe('owner not whitelisted', () => {
+      let leaf;
+      let proof;
+
+      before(() => {
+        leaf = keccak256(owner.address);
+        proof = merkleTree.getHexProof(leaf);
+      });
+
+      it('should mint if in presale and the address is not whitelisted', async () => {
+        hardhatToken.enable(true);
+        hardhatToken.presale(true);
+
+        expect(proof).to.eql([]);
+        await expect(
+          hardhatToken.mint(2, proof, {
+            value: ethers.utils.parseEther('0.08'),
+          }),
+        ).not.to.be.reverted;
+      });
+
+      it('should mint if not in presale and the address is not whitelisted', async () => {
+        hardhatToken.enable(true);
+        hardhatToken.presale(false);
+
+        expect(proof).to.eql([]);
+        await expect(
+          hardhatToken.mint(2, proof, {
+            value: ethers.utils.parseEther('0.08'),
+          }),
+        ).not.to.be.reverted;
+      });
+    });
+
+    describe('owner whitelisted', () => {
+      beforeEach(async () => {
+        hardhatToken = await Adovals.deploy(
+          'Adovals',
+          'ADV',
+          'ipf://base-url.com/',
+          ownerMerkleRoot,
+        );
+      });
+
+      it('should mint if in presale and the address is whitelisted', async () => {
+        hardhatToken.enable(true);
+        hardhatToken.presale(true);
+
+        await expect(
+          hardhatToken.mint(2, ownerAddrProof, {
+            value: ethers.utils.parseEther('0.08'),
+          }),
+        ).not.to.be.reverted;
+      });
+
+      it('should mint if not in presale and the address is whitelisted', async () => {
+        hardhatToken.enable(true);
+        hardhatToken.presale(false);
+
+        await expect(
+          hardhatToken.mint(2, ownerAddrProof, {
+            value: ethers.utils.parseEther('0.08'),
+          }),
+        ).not.to.be.reverted;
+      });
+
+      it('should mint if in presale and empty proof is provided', async () => {
+        hardhatToken.enable(true);
+        hardhatToken.presale(true);
+
+        await expect(
+          hardhatToken.mint(2, [], {
+            value: ethers.utils.parseEther('0.08'),
+          }),
+        ).not.to.be.reverted;
+      });
+
+      it('should mint if not in presale and empty proof is provided', async () => {
+        hardhatToken.enable(true);
+        hardhatToken.presale(false);
+
+        await expect(
+          hardhatToken.mint(2, [], {
+            value: ethers.utils.parseEther('0.08'),
+          }),
+        ).not.to.be.reverted;
+      });
     });
 
     it('should mint if the mint amount is bigger than the max permitted in presale', async () => {
       hardhatToken.enable(true);
       hardhatToken.presale(true);
 
-      await expect(hardhatToken.mint(3)).not.to.be.reverted;
+      await expect(hardhatToken.mint(3, [])).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(3);
     });
 
@@ -440,7 +718,7 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
       hardhatToken.presale(false);
 
-      await expect(hardhatToken.mint(11)).not.to.be.reverted;
+      await expect(hardhatToken.mint(11, [])).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(11);
     });
 
@@ -448,7 +726,7 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
       hardhatToken.presale(false);
 
-      await expect(hardhatToken.mint(5)).not.to.be.reverted;
+      await expect(hardhatToken.mint(5, [])).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(5);
     });
 
@@ -456,8 +734,8 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
       hardhatToken.presale(true);
 
-      await expect(hardhatToken.mint(2)).not.to.be.reverted;
-      await expect(hardhatToken.mint(1)).not.to.be.reverted;
+      await expect(hardhatToken.mint(2, [])).not.to.be.reverted;
+      await expect(hardhatToken.mint(1, [])).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(3);
     });
 
@@ -465,8 +743,8 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
       hardhatToken.presale(false);
 
-      await expect(hardhatToken.mint(10)).not.to.be.reverted;
-      await expect(hardhatToken.mint(1)).not.to.be.reverted;
+      await expect(hardhatToken.mint(10, [])).not.to.be.reverted;
+      await expect(hardhatToken.mint(1, [])).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(11);
     });
 
@@ -475,7 +753,7 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
       hardhatToken.presale(false);
 
-      await expect(hardhatToken.mint(2)).to.be.revertedWith(
+      await expect(hardhatToken.mint(2, [])).to.be.revertedWith(
         'There are not enough tokens left',
       );
     });
@@ -485,7 +763,7 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
       hardhatToken.presale(true);
 
-      await expect(hardhatToken.mint(2)).not.to.be.reverted;
+      await expect(hardhatToken.mint(2, [])).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(2);
     });
 
@@ -495,7 +773,7 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
       hardhatToken.presale(false);
 
-      await expect(hardhatToken.mint(2)).not.to.be.reverted;
+      await expect(hardhatToken.mint(2, [])).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(2);
     });
 
@@ -503,7 +781,7 @@ describe('Adovals contract', () => {
       hardhatToken.enable(true);
 
       expect(await hardhatToken.totalSupply()).to.equal(0);
-      await expect(hardhatToken.mint(2)).not.to.be.reverted;
+      await expect(hardhatToken.mint(2, [])).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(2);
     });
 
@@ -513,9 +791,25 @@ describe('Adovals contract', () => {
 
       expect(await hardhatToken.totalPresaleSupply()).to.equal(0);
       await expect(
-        hardhatToken.mint(2, { value: ethers.utils.parseEther('0.06') }),
+        hardhatToken.mint(2, [], { value: ethers.utils.parseEther('0.06') }),
       ).not.to.be.reverted;
       expect(await hardhatToken.totalPresaleSupply()).to.equal(0);
+    });
+  });
+
+  describe('#isValid', async () => {
+    it('should return true if the merkle proof is verified', async () => {
+      const leaf = keccak256(addr1.address);
+      const proof = merkleTree.getHexProof(leaf);
+
+      expect(await hardhatToken.isValid(proof, leaf)).to.equal(true);
+    });
+
+    it('should return false if the merkle proof is not verified', async () => {
+      const leaf = keccak256('0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+      const proof = merkleTree.getHexProof(leaf);
+
+      expect(await hardhatToken.isValid(proof, leaf)).to.equal(false);
     });
   });
 
@@ -527,7 +821,7 @@ describe('Adovals contract', () => {
 
       await hardhatToken
         .connect(addr1)
-        .mint(2, { value: ethers.utils.parseEther('0.06') });
+        .mint(2, addr1Proof, { value: ethers.utils.parseEther('0.06') });
 
       await hardhatToken.withdraw();
 
@@ -545,7 +839,7 @@ describe('Adovals contract', () => {
 
       await hardhatToken
         .connect(addr1)
-        .mint(2, { value: ethers.utils.parseEther('0.06') });
+        .mint(2, addr1Proof, { value: ethers.utils.parseEther('0.06') });
 
       await expect(hardhatToken.connect(addr2).withdraw()).to.be.reverted;
 

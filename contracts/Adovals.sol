@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract Adovals is ERC721, Ownable {
     using Strings for uint256;
@@ -19,20 +20,23 @@ contract Adovals is ERC721, Ownable {
     uint256 public saleMaxMintAmount = 10;
     uint256 public presaleCost = 0.03 ether;
     uint256 public cost = 0.04 ether;
+    bytes32 public merkleRoot;
 
     constructor(
         string memory name,
         string memory symbol,
-        string memory initBaseURI
+        string memory initBaseURI,
+        bytes32 root
     ) ERC721(name, symbol) {
         setBaseURI(initBaseURI);
+        merkleRoot = root;
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
     }
 
-    function mint(uint256 mintAmount) public payable {
+    function mint(uint256 mintAmount, bytes32[] memory proof) public payable {
         require(enabled, "The contract is not enabled");
         require(
             mintAmount > 0,
@@ -44,6 +48,11 @@ contract Adovals is ERC721, Ownable {
         );
 
         if (msg.sender != owner()) {
+            require(
+                !inPresale ||
+                    isValid(proof, keccak256(abi.encodePacked(msg.sender))),
+                "The used address is not in the presale whitelist"
+            );
             require(
                 (inPresale && mintAmount <= presaleMaxMintAmount) ||
                     (!inPresale && mintAmount <= saleMaxMintAmount),
@@ -78,6 +87,14 @@ contract Adovals is ERC721, Ownable {
         for (uint256 i = 1; i <= mintAmount; i++) {
             _safeMint(msg.sender, currentSupply + i);
         }
+    }
+
+    function isValid(bytes32[] memory proof, bytes32 leaf)
+        public
+        view
+        returns (bool)
+    {
+        return MerkleProof.verify(proof, merkleRoot, leaf);
     }
 
     function withdraw() public onlyOwner {
@@ -127,5 +144,9 @@ contract Adovals is ERC721, Ownable {
 
     function setCost(uint256 newCost) public onlyOwner {
         cost = newCost;
+    }
+
+    function setMerkleRoot(bytes32 root) public onlyOwner {
+        merkleRoot = root;
     }
 }
