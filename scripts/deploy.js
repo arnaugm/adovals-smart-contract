@@ -26,6 +26,7 @@ async function main() {
     'Adovals',
     'ADV',
     'ipf://base-url.com/',
+    'ipf://not-revealed-url.com/hidden.json',
     merkleRoot,
   );
   await adovals.deployed();

@@ -10,8 +10,10 @@ contract Adovals is ERC721, Ownable {
     using Strings for uint256;
 
     string baseURI;
+    string public notRevealedURI;
     bool public enabled = false;
     bool public inPresale = true;
+    bool public revealed = false;
     uint256 public totalPresaleSupply = 0;
     uint256 public totalSupply = 0;
     uint256 public presaleMaxSupply = 100;
@@ -26,14 +28,35 @@ contract Adovals is ERC721, Ownable {
         string memory name,
         string memory symbol,
         string memory initBaseURI,
+        string memory initNotRevealedURI,
         bytes32 root
     ) ERC721(name, symbol) {
         setBaseURI(initBaseURI);
+        setNotRevealedURI(initNotRevealedURI);
         merkleRoot = root;
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        require(_exists(tokenId), "URI query for nonexistent token");
+
+        if (!revealed) {
+            return notRevealedURI;
+        }
+
+        return
+            bytes(baseURI).length > 0
+                ? string(abi.encodePacked(baseURI, tokenId.toString()))
+                : "";
     }
 
     function mint(uint256 mintAmount, bytes32[] memory proof) public payable {
@@ -100,15 +123,15 @@ contract Adovals is ERC721, Ownable {
         return MerkleProof.verify(proof, merkleRoot, leaf);
     }
 
-    function withdraw() public onlyOwner {
-        (bool success, ) = payable(owner()).call{value: address(this).balance}(
-            ""
-        );
-        require(success);
-    }
-
     function setBaseURI(string memory newBaseURI) public onlyOwner {
         baseURI = newBaseURI;
+    }
+
+    function setNotRevealedURI(string memory newNotRevealedURI)
+        public
+        onlyOwner
+    {
+        notRevealedURI = newNotRevealedURI;
     }
 
     function enable(bool setEnabled) public onlyOwner {
@@ -117,6 +140,10 @@ contract Adovals is ERC721, Ownable {
 
     function presale(bool setPresale) public onlyOwner {
         inPresale = setPresale;
+    }
+
+    function reveal(bool setRevealed) public onlyOwner {
+        revealed = setRevealed;
     }
 
     function setPresaleMaxSupply(uint256 newPresaleMaxSupply) public onlyOwner {
@@ -151,5 +178,12 @@ contract Adovals is ERC721, Ownable {
 
     function setMerkleRoot(bytes32 root) public onlyOwner {
         merkleRoot = root;
+    }
+
+    function withdraw() public onlyOwner {
+        (bool success, ) = payable(owner()).call{value: address(this).balance}(
+            ""
+        );
+        require(success);
     }
 }

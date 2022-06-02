@@ -76,6 +76,7 @@ describe('Adovals contract', () => {
       'Adovals',
       'ADV',
       'ipf://base-url.com/',
+      'ipf://not-revealed-url.com/hidden.json',
       merkleRoot,
     );
   });
@@ -93,6 +94,12 @@ describe('Adovals contract', () => {
       expect(await hardhatToken.symbol()).to.equal('ADV');
     });
 
+    it('should set the right not revealed URI', async () => {
+      expect(await hardhatToken.notRevealedURI()).to.equal(
+        'ipf://not-revealed-url.com/hidden.json',
+      );
+    });
+
     it('should set the right Merkle root', async () => {
       expect(await hardhatToken.merkleRoot()).to.equal(merkleRoot);
     });
@@ -102,6 +109,7 @@ describe('Adovals contract', () => {
     it('should set the base URI of the tokens', async () => {
       hardhatToken.enable(true);
       hardhatToken.mint(1, []);
+      hardhatToken.reveal(true);
 
       expect(await hardhatToken.tokenURI(1)).to.equal('ipf://base-url.com/1');
     });
@@ -112,6 +120,10 @@ describe('Adovals contract', () => {
 
     it('should set the contract as in presale', async () => {
       expect(await hardhatToken.inPresale()).to.equal(true);
+    });
+
+    it('should set the state of the tokens as not revealed', async () => {
+      expect(await hardhatToken.revealed()).to.equal(false);
     });
 
     it('should set the total presale supply to 0', async () => {
@@ -151,165 +163,28 @@ describe('Adovals contract', () => {
     });
   });
 
-  describe('#setBaseURI', () => {
-    it('should change the base URI of the tokens', async () => {
-      hardhatToken.setBaseURI('http://new-url.com/');
-
-      hardhatToken.enable(true);
-      hardhatToken.mint(1, []);
-
-      expect(await hardhatToken.tokenURI(1)).to.equal('http://new-url.com/1');
+  describe('#tokenURI', () => {
+    it('should raise an error if the requested token is not minted', async () => {
+      await expect(hardhatToken.tokenURI(1)).to.be.revertedWith(
+        'URI query for nonexistent token',
+      );
     });
 
-    it('should not change the base URI of the tokens if the caller is not the owner', async () => {
-      await expect(
-        hardhatToken.connect(addr1).setBaseURI('http://new-url.com/'),
-      ).to.be.reverted;
+    it('should return the not revealed URI if the state of the tokens is not revealed', async () => {
+      await hardhatToken.mint(1, []);
 
-      hardhatToken.enable(true);
-      hardhatToken.mint(1, []);
+      const uri = await hardhatToken.tokenURI(1);
 
-      expect(await hardhatToken.tokenURI(1)).to.equal('ipf://base-url.com/1');
-    });
-  });
-
-  describe('#enable', () => {
-    it('should toggle the enabled flag', async () => {
-      hardhatToken.enable(true);
-
-      expect(await hardhatToken.enabled()).to.equal(true);
-
-      hardhatToken.enable(false);
-
-      expect(await hardhatToken.enabled()).to.equal(false);
+      expect(uri).to.equal('ipf://not-revealed-url.com/hidden.json');
     });
 
-    it('should not toggle the enable flag if the caller is not the owner', async () => {
-      await expect(hardhatToken.connect(addr1).enable(true)).to.be.reverted;
-      expect(await hardhatToken.enabled()).to.equal(false);
-    });
-  });
+    it('should return the token URI if the state of the tokens is revealed', async () => {
+      hardhatToken.reveal(true);
+      await hardhatToken.mint(1, []);
 
-  describe('#presale', () => {
-    it('should toggle the presale flag', async () => {
-      hardhatToken.presale(false);
+      const uri = await hardhatToken.tokenURI(1);
 
-      expect(await hardhatToken.inPresale()).to.equal(false);
-
-      hardhatToken.presale(true);
-
-      expect(await hardhatToken.inPresale()).to.equal(true);
-    });
-
-    it('should not toggle the presale flag if the caller is not the owner', async () => {
-      await expect(hardhatToken.connect(addr1).presale(false)).to.be.reverted;
-      expect(await hardhatToken.inPresale()).to.equal(true);
-    });
-  });
-
-  describe('#setPresaleMaxSupply', () => {
-    it('should set the presaleMaxSupply value', async () => {
-      hardhatToken.setPresaleMaxSupply(110);
-
-      expect(await hardhatToken.presaleMaxSupply()).to.equal(110);
-    });
-
-    it('should not set the presaleMaxSupply value if the caller is not the owner', async () => {
-      await expect(hardhatToken.connect(addr1).setPresaleMaxSupply(110)).to.be
-        .reverted;
-      expect(await hardhatToken.presaleMaxSupply()).to.equal(100);
-    });
-  });
-
-  describe('#setMaxSupply', () => {
-    it('should set the maxSupply value', async () => {
-      hardhatToken.setMaxSupply(2000);
-
-      expect(await hardhatToken.maxSupply()).to.equal(2000);
-    });
-
-    it('should not set the maxSupply value if the caller is not the owner', async () => {
-      await expect(hardhatToken.connect(addr1).setMaxSupply(2000)).to.be
-        .reverted;
-      expect(await hardhatToken.maxSupply()).to.equal(1500);
-    });
-  });
-
-  describe('#setPresaleMaxMintAmount', () => {
-    it('should set the presaleMaxMintAmount value', async () => {
-      hardhatToken.setPresaleMaxMintAmount(3);
-
-      expect(await hardhatToken.presaleMaxMintAmount()).to.equal(3);
-    });
-
-    it('should not set the presaleMaxMintAmount value if the caller is not the owner', async () => {
-      await expect(hardhatToken.connect(addr1).setPresaleMaxMintAmount(3)).to.be
-        .reverted;
-      expect(await hardhatToken.presaleMaxMintAmount()).to.equal(2);
-    });
-  });
-
-  describe('#setSaleMaxMintAmount', () => {
-    it('should set the saleMaxMintAmount value', async () => {
-      hardhatToken.setSaleMaxMintAmount(15);
-
-      expect(await hardhatToken.saleMaxMintAmount()).to.equal(15);
-    });
-
-    it('should not set the saleMaxMintAmount value if the caller is not the owner', async () => {
-      await expect(hardhatToken.connect(addr1).setSaleMaxMintAmount(15)).to.be
-        .reverted;
-      expect(await hardhatToken.saleMaxMintAmount()).to.equal(10);
-    });
-  });
-
-  describe('#setPresaleCost', () => {
-    const oldCost = ethers.utils.parseEther('0.03');
-    const newCost = ethers.utils.parseEther('0.05');
-
-    it('should set the presaleCost value', async () => {
-      hardhatToken.setPresaleCost(newCost);
-
-      expect(await hardhatToken.presaleCost()).to.equal(newCost);
-    });
-
-    it('should not set the presaleCost value if the caller is not the owner', async () => {
-      await expect(hardhatToken.connect(addr1).setPresaleCost(newCost)).to.be
-        .reverted;
-      expect(await hardhatToken.presaleCost()).to.equal(oldCost);
-    });
-  });
-
-  describe('#setCost', () => {
-    const oldCost = ethers.utils.parseEther('0.04');
-    const newCost = ethers.utils.parseEther('0.05');
-
-    it('should set the cost value', async () => {
-      hardhatToken.setCost(newCost);
-
-      expect(await hardhatToken.cost()).to.equal(newCost);
-    });
-
-    it('should not set the cost value if the caller is not the owner', async () => {
-      await expect(hardhatToken.connect(addr1).setCost(newCost)).to.be.reverted;
-      expect(await hardhatToken.cost()).to.equal(oldCost);
-    });
-  });
-
-  describe('#setMerkleRoot', () => {
-    const newMerkleRoot =
-      '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
-
-    it('should set the Merkle root value', async () => {
-      hardhatToken.setMerkleRoot(newMerkleRoot);
-
-      expect(await hardhatToken.merkleRoot()).to.equal(newMerkleRoot);
-    });
-
-    it('should not set the Merkle root value if the caller is not the owner', async () => {
-      await expect(hardhatToken.connect(addr1).setMerkleRoot(newMerkleRoot)).to
-        .be.reverted;
-      expect(await hardhatToken.merkleRoot()).to.equal(merkleRoot);
+      expect(uri).to.equal('ipf://base-url.com/1');
     });
   });
 
@@ -647,6 +522,7 @@ describe('Adovals contract', () => {
           'Adovals',
           'ADV',
           'ipf://base-url.com/',
+          'ipf://not-revealed-url.com/hidden.json',
           ownerMerkleRoot,
         );
       });
@@ -785,6 +661,207 @@ describe('Adovals contract', () => {
       const proof = merkleTree.getHexProof(leaf);
 
       expect(await hardhatToken.isValid(proof, leaf)).to.equal(false);
+    });
+  });
+
+  describe('#setBaseURI', () => {
+    it('should change the base URI of the tokens', async () => {
+      hardhatToken.setBaseURI('http://new-url.com/');
+
+      hardhatToken.mint(1, []);
+      hardhatToken.reveal(true);
+
+      expect(await hardhatToken.tokenURI(1)).to.equal('http://new-url.com/1');
+    });
+
+    it('should not change the base URI of the tokens if the caller is not the owner', async () => {
+      await expect(
+        hardhatToken.connect(addr1).setBaseURI('http://new-url.com/'),
+      ).to.be.reverted;
+
+      hardhatToken.mint(1, []);
+      hardhatToken.reveal(true);
+
+      expect(await hardhatToken.tokenURI(1)).to.equal('ipf://base-url.com/1');
+    });
+  });
+
+  describe('#setNotRevealedURI', () => {
+    it('should change the not revealed URI', async () => {
+      hardhatToken.setNotRevealedURI('http://new-not-revealed-url.com/');
+
+      expect(await hardhatToken.notRevealedURI()).to.equal(
+        'http://new-not-revealed-url.com/',
+      );
+    });
+
+    it('should not change the not revealed URI if the caller is not the owner', async () => {
+      await expect(
+        hardhatToken
+          .connect(addr1)
+          .setNotRevealedURI('http://new-not-revealed-url.com/'),
+      ).to.be.reverted;
+
+      expect(await hardhatToken.notRevealedURI()).to.equal(
+        'ipf://not-revealed-url.com/hidden.json',
+      );
+    });
+  });
+
+  describe('#enable', () => {
+    it('should toggle the enabled flag', async () => {
+      hardhatToken.enable(true);
+
+      expect(await hardhatToken.enabled()).to.equal(true);
+
+      hardhatToken.enable(false);
+
+      expect(await hardhatToken.enabled()).to.equal(false);
+    });
+
+    it('should not toggle the enable flag if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).enable(true)).to.be.reverted;
+      expect(await hardhatToken.enabled()).to.equal(false);
+    });
+  });
+
+  describe('#presale', () => {
+    it('should toggle the presale flag', async () => {
+      hardhatToken.presale(false);
+
+      expect(await hardhatToken.inPresale()).to.equal(false);
+
+      hardhatToken.presale(true);
+
+      expect(await hardhatToken.inPresale()).to.equal(true);
+    });
+
+    it('should not toggle the presale flag if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).presale(false)).to.be.reverted;
+      expect(await hardhatToken.inPresale()).to.equal(true);
+    });
+  });
+
+  describe('#reveal', () => {
+    it('should toggle the revealed flag', async () => {
+      hardhatToken.reveal(true);
+
+      expect(await hardhatToken.revealed()).to.equal(true);
+
+      hardhatToken.reveal(false);
+
+      expect(await hardhatToken.revealed()).to.equal(false);
+    });
+
+    it('should not toggle the revealed flag if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).reveal(true)).to.be.reverted;
+      expect(await hardhatToken.revealed()).to.equal(false);
+    });
+  });
+
+  describe('#setPresaleMaxSupply', () => {
+    it('should set the presaleMaxSupply value', async () => {
+      hardhatToken.setPresaleMaxSupply(110);
+
+      expect(await hardhatToken.presaleMaxSupply()).to.equal(110);
+    });
+
+    it('should not set the presaleMaxSupply value if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).setPresaleMaxSupply(110)).to.be
+        .reverted;
+      expect(await hardhatToken.presaleMaxSupply()).to.equal(100);
+    });
+  });
+
+  describe('#setMaxSupply', () => {
+    it('should set the maxSupply value', async () => {
+      hardhatToken.setMaxSupply(2000);
+
+      expect(await hardhatToken.maxSupply()).to.equal(2000);
+    });
+
+    it('should not set the maxSupply value if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).setMaxSupply(2000)).to.be
+        .reverted;
+      expect(await hardhatToken.maxSupply()).to.equal(1500);
+    });
+  });
+
+  describe('#setPresaleMaxMintAmount', () => {
+    it('should set the presaleMaxMintAmount value', async () => {
+      hardhatToken.setPresaleMaxMintAmount(3);
+
+      expect(await hardhatToken.presaleMaxMintAmount()).to.equal(3);
+    });
+
+    it('should not set the presaleMaxMintAmount value if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).setPresaleMaxMintAmount(3)).to.be
+        .reverted;
+      expect(await hardhatToken.presaleMaxMintAmount()).to.equal(2);
+    });
+  });
+
+  describe('#setSaleMaxMintAmount', () => {
+    it('should set the saleMaxMintAmount value', async () => {
+      hardhatToken.setSaleMaxMintAmount(15);
+
+      expect(await hardhatToken.saleMaxMintAmount()).to.equal(15);
+    });
+
+    it('should not set the saleMaxMintAmount value if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).setSaleMaxMintAmount(15)).to.be
+        .reverted;
+      expect(await hardhatToken.saleMaxMintAmount()).to.equal(10);
+    });
+  });
+
+  describe('#setPresaleCost', () => {
+    const oldCost = ethers.utils.parseEther('0.03');
+    const newCost = ethers.utils.parseEther('0.05');
+
+    it('should set the presaleCost value', async () => {
+      hardhatToken.setPresaleCost(newCost);
+
+      expect(await hardhatToken.presaleCost()).to.equal(newCost);
+    });
+
+    it('should not set the presaleCost value if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).setPresaleCost(newCost)).to.be
+        .reverted;
+      expect(await hardhatToken.presaleCost()).to.equal(oldCost);
+    });
+  });
+
+  describe('#setCost', () => {
+    const oldCost = ethers.utils.parseEther('0.04');
+    const newCost = ethers.utils.parseEther('0.05');
+
+    it('should set the cost value', async () => {
+      hardhatToken.setCost(newCost);
+
+      expect(await hardhatToken.cost()).to.equal(newCost);
+    });
+
+    it('should not set the cost value if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).setCost(newCost)).to.be.reverted;
+      expect(await hardhatToken.cost()).to.equal(oldCost);
+    });
+  });
+
+  describe('#setMerkleRoot', () => {
+    const newMerkleRoot =
+      '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+
+    it('should set the Merkle root value', async () => {
+      hardhatToken.setMerkleRoot(newMerkleRoot);
+
+      expect(await hardhatToken.merkleRoot()).to.equal(newMerkleRoot);
+    });
+
+    it('should not set the Merkle root value if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).setMerkleRoot(newMerkleRoot)).to
+        .be.reverted;
+      expect(await hardhatToken.merkleRoot()).to.equal(merkleRoot);
     });
   });
 
