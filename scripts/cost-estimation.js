@@ -45,12 +45,19 @@ const getEstimation = async (gasUsed) => {
   const costProposeGasPriceInEth = proposeGasPrice / 1000000000;
   const costFastGasPriceInEth = fastGasPrice / 1000000000;
 
+  console.log('/***** Ether *****/');
+  console.log(`Safe: ${costSafeGasPriceInEth.toFixed(10)} ETH`);
+  console.log(`Proposed: ${costProposeGasPriceInEth.toFixed(10)} ETH`);
+  console.log(`Fast: ${costFastGasPriceInEth.toFixed(10)} ETH`);
+
   const conversionRate = await getEth2UsdConversionRate();
 
   const costSafeGasPriceInUsd = costSafeGasPriceInEth * conversionRate;
   const costProposeGasPriceInUsd = costProposeGasPriceInEth * conversionRate;
   const costFastGasPriceInUsd = costFastGasPriceInEth * conversionRate;
 
+  console.log('');
+  console.log('/***** USD *****/');
   console.log(`Safe: ${costSafeGasPriceInUsd.toFixed(2)}$`);
   console.log(`Proposed: ${costProposeGasPriceInUsd.toFixed(2)}$`);
   console.log(`Fast: ${costFastGasPriceInUsd.toFixed(2)}$`);
