@@ -37,7 +37,10 @@ contract Adovals is ERC721, Ownable {
     }
 
     function mint(uint256 mintAmount, bytes32[] memory proof) public payable {
-        require(enabled, "The contract is not enabled");
+        if (msg.sender != owner()) {
+            require(enabled, "The contract is not enabled");
+        }
+
         require(
             mintAmount > 0,
             "A mint amount bigger than 0 needs to be provided"

@@ -591,27 +591,19 @@ describe('Adovals contract', () => {
   });
 
   describe('#mint owner', () => {
-    it('should not mint if the contract is not enabled', async () => {
-      await expect(hardhatToken.mint(2, [])).to.be.revertedWith(
-        'The contract is not enabled',
-      );
+    it('should mint if the contract is not enabled', async () => {
+      await expect(hardhatToken.mint(2, [])).not.to.be.reverted;
     });
 
     it('should not mint if the amount is not provided', async () => {
-      hardhatToken.enable(true);
-
       await expect(hardhatToken.mint()).to.be.reverted;
     });
 
     it('should not mint if the merkle proof is not provided', async () => {
-      hardhatToken.enable(true);
-
       await expect(hardhatToken.mint(2)).to.be.reverted;
     });
 
     it('should not mint if the amount is 0', async () => {
-      hardhatToken.enable(true);
-
       await expect(hardhatToken.mint(0, [])).to.be.revertedWith(
         'A mint amount bigger than 0 needs to be provided',
       );
@@ -627,7 +619,6 @@ describe('Adovals contract', () => {
       });
 
       it('should mint if in presale and the address is not whitelisted', async () => {
-        hardhatToken.enable(true);
         hardhatToken.presale(true);
 
         expect(proof).to.eql([]);
@@ -639,7 +630,6 @@ describe('Adovals contract', () => {
       });
 
       it('should mint if not in presale and the address is not whitelisted', async () => {
-        hardhatToken.enable(true);
         hardhatToken.presale(false);
 
         expect(proof).to.eql([]);
@@ -662,7 +652,6 @@ describe('Adovals contract', () => {
       });
 
       it('should mint if in presale and the address is whitelisted', async () => {
-        hardhatToken.enable(true);
         hardhatToken.presale(true);
 
         await expect(
@@ -673,7 +662,6 @@ describe('Adovals contract', () => {
       });
 
       it('should mint if not in presale and the address is whitelisted', async () => {
-        hardhatToken.enable(true);
         hardhatToken.presale(false);
 
         await expect(
@@ -684,7 +672,6 @@ describe('Adovals contract', () => {
       });
 
       it('should mint if in presale and empty proof is provided', async () => {
-        hardhatToken.enable(true);
         hardhatToken.presale(true);
 
         await expect(
@@ -695,7 +682,6 @@ describe('Adovals contract', () => {
       });
 
       it('should mint if not in presale and empty proof is provided', async () => {
-        hardhatToken.enable(true);
         hardhatToken.presale(false);
 
         await expect(
@@ -707,15 +693,13 @@ describe('Adovals contract', () => {
     });
 
     it('should mint if the mint amount is bigger than the max permitted in presale', async () => {
-      hardhatToken.enable(true);
       hardhatToken.presale(true);
 
       await expect(hardhatToken.mint(3, [])).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(3);
     });
 
-    it('should not mint if the mint amount is bigger than the max permitted in public sale', async () => {
-      hardhatToken.enable(true);
+    it('should mint if the mint amount is bigger than the max permitted in public sale', async () => {
       hardhatToken.presale(false);
 
       await expect(hardhatToken.mint(11, [])).not.to.be.reverted;
@@ -723,7 +707,6 @@ describe('Adovals contract', () => {
     });
 
     it('should mint if the mint amount is bigger than presale max and smaller than public sale max if in public sale', async () => {
-      hardhatToken.enable(true);
       hardhatToken.presale(false);
 
       await expect(hardhatToken.mint(5, [])).not.to.be.reverted;
@@ -731,7 +714,6 @@ describe('Adovals contract', () => {
     });
 
     it('should mint if the total mint amount for the account is bigger than the max permitted in presale', async () => {
-      hardhatToken.enable(true);
       hardhatToken.presale(true);
 
       await expect(hardhatToken.mint(2, [])).not.to.be.reverted;
@@ -740,7 +722,6 @@ describe('Adovals contract', () => {
     });
 
     it('should mint if the total mint amount for the account is bigger than the max permitted in public sale', async () => {
-      hardhatToken.enable(true);
       hardhatToken.presale(false);
 
       await expect(hardhatToken.mint(10, [])).not.to.be.reverted;
@@ -750,7 +731,6 @@ describe('Adovals contract', () => {
 
     it('should not mint if there are not enough tokens left', async () => {
       hardhatToken.setMaxSupply(1);
-      hardhatToken.enable(true);
       hardhatToken.presale(false);
 
       await expect(hardhatToken.mint(2, [])).to.be.revertedWith(
@@ -760,7 +740,6 @@ describe('Adovals contract', () => {
 
     it('should mint if there are not enough presale tokens left', async () => {
       hardhatToken.setPresaleMaxSupply(1);
-      hardhatToken.enable(true);
       hardhatToken.presale(true);
 
       await expect(hardhatToken.mint(2, [])).not.to.be.reverted;
@@ -770,7 +749,6 @@ describe('Adovals contract', () => {
     it('should mint above presale max supply if not in presale', async () => {
       hardhatToken.setPresaleMaxSupply(1);
       hardhatToken.setMaxSupply(3);
-      hardhatToken.enable(true);
       hardhatToken.presale(false);
 
       await expect(hardhatToken.mint(2, [])).not.to.be.reverted;
@@ -778,15 +756,12 @@ describe('Adovals contract', () => {
     });
 
     it('should mint without sending ether', async () => {
-      hardhatToken.enable(true);
-
       expect(await hardhatToken.totalSupply()).to.equal(0);
       await expect(hardhatToken.mint(2, [])).not.to.be.reverted;
       expect(await hardhatToken.totalSupply()).to.equal(2);
     });
 
     it('should not count mints as presale mints', async () => {
-      hardhatToken.enable(true);
       hardhatToken.presale(true);
 
       expect(await hardhatToken.totalPresaleSupply()).to.equal(0);
