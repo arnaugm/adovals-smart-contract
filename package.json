@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@alch/alchemy-web3": "^1.2.5",
-    "@openzeppelin/contracts": "^4.5.0",
+    "@openzeppelin/contracts": "^4.6.0",
     "dotenv": "^16.0.0",
     "node-fetch": "^2.6.7",
     "yargs": "^17.4.1"
