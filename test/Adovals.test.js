@@ -656,6 +656,22 @@ describe('Adovals contract', () => {
       expect(await hardhatToken.isValid(proof, leaf)).to.equal(true);
     });
 
+    it('should not validate uppercase addresses', async () => {
+      const capitalAddress = addr1.address.toUpperCase();
+      const leaf = keccak256(capitalAddress);
+      const proof = merkleTree.getHexProof(leaf);
+
+      expect(await hardhatToken.isValid(proof, leaf)).to.equal(false);
+    });
+
+    it('should validate lowercase addresses', async () => {
+      const lowerAddress = addr1.address.toLowerCase();
+      const leaf = keccak256(lowerAddress);
+      const proof = merkleTree.getHexProof(leaf);
+
+      expect(await hardhatToken.isValid(proof, leaf)).to.equal(true);
+    });
+
     it('should return false if the merkle proof is not verified', async () => {
       const leaf = keccak256('0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
       const proof = merkleTree.getHexProof(leaf);
@@ -850,7 +866,7 @@ describe('Adovals contract', () => {
 
   describe('#setMerkleRoot', () => {
     const newMerkleRoot =
-      '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+      '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
     it('should set the Merkle root value', async () => {
       hardhatToken.setMerkleRoot(newMerkleRoot);
