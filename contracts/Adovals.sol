@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract Adovals is ERC721, Ownable {
+contract Adovals is ERC721A, Ownable {
     using Strings for uint256;
 
     string baseURI;
@@ -15,7 +15,6 @@ contract Adovals is ERC721, Ownable {
     bool public inPresale = true;
     bool public revealed = false;
     uint256 public totalPresaleSupply = 0;
-    uint256 public totalSupply = 0;
     uint256 public presaleMaxSupply = 100;
     uint256 public maxSupply = 1500;
     uint256 public presaleMaxMintAmount = 2;
@@ -30,7 +29,7 @@ contract Adovals is ERC721, Ownable {
         string memory initBaseURI,
         string memory initNotRevealedURI,
         bytes32 root
-    ) ERC721(name, symbol) {
+    ) ERC721A(name, symbol) {
         setBaseURI(initBaseURI);
         setNotRevealedURI(initNotRevealedURI);
         merkleRoot = root;
@@ -47,19 +46,18 @@ contract Adovals is ERC721, Ownable {
         override
         returns (string memory)
     {
-        require(_exists(tokenId), "URI query for nonexistent token");
-
+        if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
         if (!revealed) {
             return notRevealedURI;
         }
 
         return
-            bytes(baseURI).length > 0
+            bytes(baseURI).length != 0
                 ? string(abi.encodePacked(baseURI, tokenId.toString()))
                 : "";
     }
 
-    function mint(uint256 mintAmount, bytes32[] memory proof) public payable {
+    function mint(uint256 mintAmount, bytes32[] memory proof) external payable {
         if (msg.sender != owner()) {
             require(enabled, "The contract is not enabled");
         }
@@ -69,7 +67,7 @@ contract Adovals is ERC721, Ownable {
             "A mint amount bigger than 0 needs to be provided"
         );
         require(
-            totalSupply + mintAmount <= maxSupply,
+            totalSupply() + mintAmount <= maxSupply,
             "There are not enough tokens left"
         );
 
@@ -86,10 +84,10 @@ contract Adovals is ERC721, Ownable {
             );
             require(
                 (inPresale &&
-                    balanceOf(msg.sender) + mintAmount <=
+                    _numberMinted(msg.sender) + mintAmount <=
                     presaleMaxMintAmount) ||
                     (!inPresale &&
-                        balanceOf(msg.sender) + mintAmount <=
+                        _numberMinted(msg.sender) + mintAmount <=
                         saleMaxMintAmount),
                 "The total mint amount for the account is bigger than the maximum"
             );
@@ -105,14 +103,10 @@ contract Adovals is ERC721, Ownable {
             );
         }
 
-        uint256 currentSupply = totalSupply;
-        totalSupply = totalSupply + mintAmount;
         if (inPresale && msg.sender != owner()) {
             totalPresaleSupply = totalPresaleSupply + mintAmount;
         }
-        for (uint256 i = 1; i <= mintAmount; i++) {
-            _safeMint(msg.sender, currentSupply + i);
-        }
+        _safeMint(msg.sender, mintAmount);
     }
 
     function isValid(bytes32[] memory proof, bytes32 leaf)

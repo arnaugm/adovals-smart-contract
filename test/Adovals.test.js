@@ -111,7 +111,7 @@ describe('Adovals contract', () => {
       hardhatToken.mint(1, []);
       hardhatToken.reveal(true);
 
-      expect(await hardhatToken.tokenURI(1)).to.equal('ipf://base-url.com/1');
+      expect(await hardhatToken.tokenURI(0)).to.equal('ipf://base-url.com/0');
     });
 
     it('should set the contract as not enabled', async () => {
@@ -165,15 +165,15 @@ describe('Adovals contract', () => {
 
   describe('#tokenURI', () => {
     it('should raise an error if the requested token is not minted', async () => {
-      await expect(hardhatToken.tokenURI(1)).to.be.revertedWith(
-        'URI query for nonexistent token',
+      await expect(hardhatToken.tokenURI(0)).to.be.revertedWith(
+        "reverted with custom error 'URIQueryForNonexistentToken()'",
       );
     });
 
     it('should return the not revealed URI if the state of the tokens is not revealed', async () => {
       await hardhatToken.mint(1, []);
 
-      const uri = await hardhatToken.tokenURI(1);
+      const uri = await hardhatToken.tokenURI(0);
 
       expect(uri).to.equal('ipf://not-revealed-url.com/hidden.json');
     });
@@ -182,9 +182,9 @@ describe('Adovals contract', () => {
       hardhatToken.reveal(true);
       await hardhatToken.mint(1, []);
 
-      const uri = await hardhatToken.tokenURI(1);
+      const uri = await hardhatToken.tokenURI(0);
 
-      expect(uri).to.equal('ipf://base-url.com/1');
+      expect(uri).to.equal('ipf://base-url.com/0');
     });
   });
 
@@ -687,7 +687,7 @@ describe('Adovals contract', () => {
       hardhatToken.mint(1, []);
       hardhatToken.reveal(true);
 
-      expect(await hardhatToken.tokenURI(1)).to.equal('http://new-url.com/1');
+      expect(await hardhatToken.tokenURI(0)).to.equal('http://new-url.com/0');
     });
 
     it('should not change the base URI of the tokens if the caller is not the owner', async () => {
@@ -698,7 +698,7 @@ describe('Adovals contract', () => {
       hardhatToken.mint(1, []);
       hardhatToken.reveal(true);
 
-      expect(await hardhatToken.tokenURI(1)).to.equal('ipf://base-url.com/1');
+      expect(await hardhatToken.tokenURI(0)).to.equal('ipf://base-url.com/0');
     });
   });
 
