@@ -177,6 +177,6 @@ contract Adovals is ERC721A, Ownable {
         (bool success, ) = payable(owner()).call{value: address(this).balance}(
             ""
         );
-        require(success);
+        require(success, "Failure withdrawing Ether");
     }
 }
