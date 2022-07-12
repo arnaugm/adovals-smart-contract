@@ -4,7 +4,6 @@ pragma solidity ^0.8.4;
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract Adovals is ERC721A, Ownable {
     using Strings for uint256;
@@ -75,7 +74,7 @@ contract Adovals is ERC721A, Ownable {
             require(
                 !inPresale ||
                     isValid(proof, keccak256(abi.encodePacked(msg.sender))),
-                "The used address is not in the presale whitelist"
+                "The used address is not in the presale allowlist"
             );
             require(
                 (inPresale && mintAmount <= presaleMaxMintAmount) ||

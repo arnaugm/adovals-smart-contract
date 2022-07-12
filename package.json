@@ -10,7 +10,7 @@
     "lint:sol:fix": "prettier --write contracts/**/*.sol",
     "lint": "npm run lint:js && npm run lint:sol",
     "cost": "node scripts/cost-estimation",
-    "hash": "node scripts/hash-whitelist"
+    "hash": "node scripts/hash-allowlist"
   },
   "author": "",
   "license": "ISC",

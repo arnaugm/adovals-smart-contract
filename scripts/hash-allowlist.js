@@ -2,13 +2,13 @@
 
 const keccak256 = require('keccak256');
 
-const whitelist = require('./whitelist.json');
+const allowlist = require('./allowlist.json');
 
 async function hash() {
-  const hashes = whitelist.map(
+  const hashes = allowlist.map(
     (addr) => `0x${keccak256(addr).toString('hex')}`,
   );
-  console.log(`Whitelist hashes: ${JSON.stringify(hashes)}`);
+  console.log(`Allowlist hashes: ${JSON.stringify(hashes)}`);
 }
 
 hash()

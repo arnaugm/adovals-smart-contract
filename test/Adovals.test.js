@@ -16,9 +16,9 @@ describe('Adovals contract', () => {
   let addr5;
   let addr6;
   let addr7;
-  let notWhitelistedAddr;
-  let whitelist;
-  let ownerWhitelist;
+  let notAllowlistedAddr;
+  let allowlist;
+  let ownerAllowlist;
   let merkleTree;
   let ownerMerkleTree;
   let merkleRoot;
@@ -50,10 +50,10 @@ describe('Adovals contract', () => {
       addr5,
       addr6,
       addr7,
-      notWhitelistedAddr,
+      notAllowlistedAddr,
     ] = await ethers.getSigners();
 
-    whitelist = [
+    allowlist = [
       addr1.address,
       addr2.address,
       addr3.address,
@@ -62,9 +62,9 @@ describe('Adovals contract', () => {
       addr6.address,
       addr7.address,
     ];
-    ownerWhitelist = [owner.address, ...whitelist];
+    ownerAllowlist = [owner.address, ...allowlist];
 
-    generateMerkleTrees(ownerWhitelist);
+    generateMerkleTrees(ownerAllowlist);
 
     addr1Proof = merkleTree.getHexProof(keccak256(addr1.address));
     addr2Proof = merkleTree.getHexProof(keccak256(addr2.address));
@@ -219,42 +219,42 @@ describe('Adovals contract', () => {
       );
     });
 
-    describe('address not whitelisted', () => {
-      let tokenNotWhitelisted;
-      let notWhitelistedProof;
+    describe('address not allowlisted', () => {
+      let tokenNotAllowlisted;
+      let notAllowlistedProof;
 
       beforeEach(async () => {
-        tokenNotWhitelisted = hardhatToken.connect(notWhitelistedAddr);
-        const leaf = keccak256(notWhitelistedAddr.address);
-        notWhitelistedProof = merkleTree.getHexProof(leaf);
+        tokenNotAllowlisted = hardhatToken.connect(notAllowlistedAddr);
+        const leaf = keccak256(notAllowlistedAddr.address);
+        notAllowlistedProof = merkleTree.getHexProof(leaf);
       });
 
-      it('should not mint if in presale and the address is not whitelisted', async () => {
+      it('should not mint if in presale and the address is not allowlisted', async () => {
         hardhatToken.enable(true);
         hardhatToken.presale(true);
 
         await expect(
-          tokenNotWhitelisted.mint(2, notWhitelistedProof, {
+          tokenNotAllowlisted.mint(2, notAllowlistedProof, {
             value: ethers.utils.parseEther('0.08'),
           }),
         ).to.be.revertedWith(
-          'The used address is not in the presale whitelist',
+          'The used address is not in the presale allowlist',
         );
       });
 
-      it('should mint if not in presale and the address is not whitelisted', async () => {
+      it('should mint if not in presale and the address is not allowlisted', async () => {
         hardhatToken.enable(true);
         hardhatToken.presale(false);
 
         await expect(
-          tokenNotWhitelisted.mint(2, notWhitelistedProof, {
+          tokenNotAllowlisted.mint(2, notAllowlistedProof, {
             value: ethers.utils.parseEther('0.08'),
           }),
         ).not.to.be.reverted;
       });
     });
 
-    it('should mint if in presale and the address is whitelisted', async () => {
+    it('should mint if in presale and the address is allowlisted', async () => {
       hardhatToken.enable(true);
       hardhatToken.presale(true);
 
@@ -265,7 +265,7 @@ describe('Adovals contract', () => {
       ).not.to.be.reverted;
     });
 
-    it('should mint if not in presale and the address is whitelisted', async () => {
+    it('should mint if not in presale and the address is allowlisted', async () => {
       hardhatToken.enable(true);
       hardhatToken.presale(false);
 
@@ -284,7 +284,7 @@ describe('Adovals contract', () => {
         tokenNoOwner.mint(2, [], {
           value: ethers.utils.parseEther('0.08'),
         }),
-      ).to.be.revertedWith('The used address is not in the presale whitelist');
+      ).to.be.revertedWith('The used address is not in the presale allowlist');
     });
 
     it('should mint if not in presale and empty proof is provided', async () => {
@@ -484,7 +484,7 @@ describe('Adovals contract', () => {
       );
     });
 
-    describe('owner not whitelisted', () => {
+    describe('owner not allowlisted', () => {
       let leaf;
       let proof;
 
@@ -493,7 +493,7 @@ describe('Adovals contract', () => {
         proof = merkleTree.getHexProof(leaf);
       });
 
-      it('should mint if in presale and the address is not whitelisted', async () => {
+      it('should mint if in presale and the address is not allowlisted', async () => {
         hardhatToken.presale(true);
 
         expect(proof).to.eql([]);
@@ -504,7 +504,7 @@ describe('Adovals contract', () => {
         ).not.to.be.reverted;
       });
 
-      it('should mint if not in presale and the address is not whitelisted', async () => {
+      it('should mint if not in presale and the address is not allowlisted', async () => {
         hardhatToken.presale(false);
 
         expect(proof).to.eql([]);
@@ -516,7 +516,7 @@ describe('Adovals contract', () => {
       });
     });
 
-    describe('owner whitelisted', () => {
+    describe('owner allowlisted', () => {
       beforeEach(async () => {
         hardhatToken = await Adovals.deploy(
           'Adovals',
@@ -527,7 +527,7 @@ describe('Adovals contract', () => {
         );
       });
 
-      it('should mint if in presale and the address is whitelisted', async () => {
+      it('should mint if in presale and the address is allowlisted', async () => {
         hardhatToken.presale(true);
 
         await expect(
@@ -537,7 +537,7 @@ describe('Adovals contract', () => {
         ).not.to.be.reverted;
       });
 
-      it('should mint if not in presale and the address is whitelisted', async () => {
+      it('should mint if not in presale and the address is allowlisted', async () => {
         hardhatToken.presale(false);
 
         await expect(

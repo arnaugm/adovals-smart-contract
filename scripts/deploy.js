@@ -4,7 +4,7 @@ const { ethers } = require('hardhat');
 const keccak256 = require('keccak256');
 const { MerkleTree } = require('merkletreejs');
 
-const whitelist = require('./whitelist.json');
+const allowlist = require('./allowlist.json');
 
 const generateMerkleTree = (addresses) => {
   const leaves = addresses.map((addr) => keccak256(addr));
@@ -19,7 +19,7 @@ const generateMerkleTree = (addresses) => {
 async function main() {
   const Adovals = await ethers.getContractFactory('Adovals');
 
-  const merkleRoot = generateMerkleTree(whitelist);
+  const merkleRoot = generateMerkleTree(allowlist);
 
   // Start deployment, returning a promise that resolves to a contract object
   const adovals = await Adovals.deploy(
@@ -31,7 +31,7 @@ async function main() {
   );
   await adovals.deployed();
   console.log(`Contract deployed to address: ${adovals.address}`);
-  console.log(`Whitelist: ${whitelist}`);
+  console.log(`Allowlist: ${allowlist}`);
   console.log(`Merkle root: ${merkleRoot}`);
 }
 
