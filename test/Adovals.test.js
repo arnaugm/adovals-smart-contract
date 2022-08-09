@@ -142,6 +142,10 @@ describe('Adovals contract', () => {
       expect(await hardhatToken.maxSupply()).to.equal(1500);
     });
 
+    it('should reserve 10 tokens', async () => {
+      expect(await hardhatToken.reservedTokens()).to.equal(10);
+    });
+
     it('should set the presale max mint amount to 2', async () => {
       expect(await hardhatToken.presaleMaxMintAmount()).to.equal(2);
     });
@@ -191,6 +195,7 @@ describe('Adovals contract', () => {
   describe('#mint', () => {
     beforeEach(async () => {
       tokenNoOwner = hardhatToken.connect(addr1);
+      hardhatToken.setReservedTokens(0);
     });
 
     it('should not mint if the contract is not enabled', async () => {
@@ -370,6 +375,17 @@ describe('Adovals contract', () => {
       ).to.be.revertedWith('There are not enough tokens left');
     });
 
+    it('should not mint if there are not enough tokens left taken into account the final reserved tokens', async () => {
+      hardhatToken.setMaxSupply(5);
+      hardhatToken.setReservedTokens(2);
+      hardhatToken.enable(true);
+      hardhatToken.presale(false);
+
+      await expect(
+        tokenNoOwner.mint(4, [], { value: ethers.utils.parseEther('0.16') }),
+      ).to.be.revertedWith('There are not enough tokens left');
+    });
+
     it('should not mint if there are not enough presale tokens left', async () => {
       hardhatToken.setPresaleMaxSupply(1);
       hardhatToken.enable(true);
@@ -466,6 +482,10 @@ describe('Adovals contract', () => {
   });
 
   describe('#mint owner', () => {
+    beforeEach(async () => {
+      hardhatToken.setReservedTokens(0);
+    });
+
     it('should mint if the contract is not enabled', async () => {
       await expect(hardhatToken.mint(2, [])).not.to.be.reverted;
     });
@@ -612,6 +632,16 @@ describe('Adovals contract', () => {
       await expect(hardhatToken.mint(2, [])).to.be.revertedWith(
         'There are not enough tokens left',
       );
+    });
+
+    it('should mint if there are not enough tokens left taken into account the final reserved tokens', async () => {
+      hardhatToken.setMaxSupply(5);
+      hardhatToken.setReservedTokens(2);
+      hardhatToken.enable(true);
+      hardhatToken.presale(false);
+
+      await expect(hardhatToken.mint(4, [])).not.to.be.reverted;
+      expect(await hardhatToken.totalSupply()).to.equal(4);
     });
 
     it('should mint if there are not enough presale tokens left', async () => {
@@ -800,6 +830,20 @@ describe('Adovals contract', () => {
       await expect(hardhatToken.connect(addr1).setMaxSupply(2000)).to.be
         .reverted;
       expect(await hardhatToken.maxSupply()).to.equal(1500);
+    });
+  });
+
+  describe('#setReservedTokens', () => {
+    it('should set the reservedTokens value', async () => {
+      hardhatToken.setReservedTokens(3);
+
+      expect(await hardhatToken.reservedTokens()).to.equal(3);
+    });
+
+    it('should not set the reservedTokens value if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).setReservedTokens(3)).to.be
+        .reverted;
+      expect(await hardhatToken.reservedTokens()).to.equal(10);
     });
   });
 

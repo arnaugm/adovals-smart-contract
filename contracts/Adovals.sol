@@ -16,6 +16,7 @@ contract Adovals is ERC721A, Ownable {
     uint256 public totalPresaleSupply = 0;
     uint256 public presaleMaxSupply = 100;
     uint256 public maxSupply = 1500;
+    uint256 public reservedTokens = 10;
     uint256 public presaleMaxMintAmount = 2;
     uint256 public saleMaxMintAmount = 10;
     uint256 public presaleCost = 0.03 ether;
@@ -97,6 +98,11 @@ contract Adovals is ERC721A, Ownable {
             );
 
             require(
+                totalSupply() + mintAmount <= maxSupply - reservedTokens,
+                "There are not enough tokens left"
+            );
+
+            require(
                 msg.value >= presaleCost * mintAmount,
                 "Not enough ether is sent for the purchase"
             );
@@ -145,6 +151,10 @@ contract Adovals is ERC721A, Ownable {
 
     function setMaxSupply(uint256 newMaxSupply) public onlyOwner {
         maxSupply = newMaxSupply;
+    }
+
+    function setReservedTokens(uint256 numReserved) public onlyOwner {
+        reservedTokens = numReserved;
     }
 
     function setPresaleMaxMintAmount(uint256 newPresaleMaxMintAmount)
