@@ -29,3 +29,11 @@ Deploy the contract to a local Hardhat Network.
 ```bash
 npx hardhat run scripts/deploy.js --network localhost
 ```
+
+### Interact with local contract
+
+Enable the contract after being deployed to the hardhat network
+
+```bash
+npx hardhat run --network localhost ./scripts/enable.js 
+```
