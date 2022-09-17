@@ -32,8 +32,20 @@ npx hardhat run scripts/deploy.js --network localhost
 
 ### Interact with local contract
 
-Enable the contract after being deployed to the hardhat network
+* Enable the contract after being deployed to the hardhat network
 
 ```bash
 npx hardhat run --network localhost ./scripts/enable.js 
+```
+
+* Set the contract in public mint state
+
+```bash
+npx hardhat run --network localhost ./scripts/not-presale.js 
+```
+
+* Set the contract in presale state
+
+```bash
+npx hardhat run --network localhost ./scripts/presale.js 
 ```

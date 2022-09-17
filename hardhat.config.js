@@ -3,8 +3,9 @@
  */
 require('dotenv').config();
 require('@nomiclabs/hardhat-waffle');
+require('hardhat-gas-reporter');
 
-const { API_URL, PRIVATE_KEY } = process.env;
+const { API_URL, PRIVATE_KEY, REPORT_GAS } = process.env;
 
 module.exports = {
   solidity: '0.8.4',
@@ -17,5 +18,9 @@ module.exports = {
       url: API_URL,
       accounts: [`0x${PRIVATE_KEY}`],
     },
+  },
+  gasReporter: {
+    currency: 'EUR',
+    enabled: REPORT_GAS === 'true',
   },
 };

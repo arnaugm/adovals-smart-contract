@@ -5,7 +5,7 @@ async function main() {
   const Adovals = await ethers.getContractFactory('Adovals');
   const contract = await Adovals.attach(address);
 
-  const result = await contract.enable(true);
+  const result = await contract.presale(true);
   console.log(result);
 }
 
