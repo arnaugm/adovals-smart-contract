@@ -1,39 +1,49 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console,no-unused-vars */
 
 const { ethers } = require('hardhat');
-const keccak256 = require('keccak256');
-const { MerkleTree } = require('merkletreejs');
 
 const allowlist = require('./allowlist.json');
+const { generateMerkleTree } = require('./merkle-tree');
 
-const generateMerkleTree = (addresses) => {
-  const leaves = addresses.map((addr) => keccak256(addr));
-
-  const merkleTree = new MerkleTree(leaves, keccak256, {
-    sortPairs: true,
-  });
-
-  return `0x${merkleTree.getRoot().toString('hex')}`;
+const localData = {
+  initBaseURI: 'ipf://base-url.com/',
+  initNotRevealedURI: 'ipf://not-revealed-url.com/hidden.json',
 };
 
-async function main() {
+const testnetData = {
+  initBaseURI: '',
+  initNotRevealedURI: '',
+};
+
+const mainnetData = {
+  initBaseURI: '',
+  initNotRevealedURI: '',
+};
+
+const deploymentData = {
+  name: 'Adovals',
+  symbol: 'ADV',
+  ...localData,
+};
+
+const main = async () => {
   const Adovals = await ethers.getContractFactory('Adovals');
 
   const merkleRoot = generateMerkleTree(allowlist);
 
   // Start deployment, returning a promise that resolves to a contract object
   const adovals = await Adovals.deploy(
-    'Adovals',
-    'ADV',
-    'ipf://base-url.com/',
-    'ipf://not-revealed-url.com/hidden.json',
+    deploymentData.name,
+    deploymentData.symbol,
+    deploymentData.initBaseURI,
+    deploymentData.initNotRevealedURI,
     merkleRoot,
   );
   await adovals.deployed();
   console.log(`Contract deployed to address: ${adovals.address}`);
   console.log(`Allowlist: ${allowlist}`);
   console.log(`Merkle root: ${merkleRoot}`);
-}
+};
 
 main()
   .then(() => process.exit(0))

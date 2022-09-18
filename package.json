@@ -10,7 +10,9 @@
     "lint:sol:fix": "prettier --write contracts/**/*.sol",
     "lint": "npm run lint:js && npm run lint:sol",
     "cost": "node scripts/cost-estimation",
-    "hash": "node scripts/hash-allowlist"
+    "hash": "node scripts/hash-allowlist",
+    "addrs": "node scripts/address-generator",
+    "merkle-root": "node scripts/compute-merkle-tree"
   },
   "author": "",
   "license": "ISC",

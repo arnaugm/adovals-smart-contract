@@ -14,12 +14,28 @@ Calculate with current conversion rates, the value in ETH and USD of a given amo
 npm run cost -- -g 3712560
 ```
 
+### Random address generator
+
+Create a list of random addresses
+
+```bash
+npm run addrs -- -n 100
+```
+
+### Calculate Merkle Tree
+
+Calculates the Merkle Tree of the allowlist and returns the Merkle root
+
+```bash
+npm run merkle-root -- -f allowlist-test.json    // default value: allowlist.json
+```
+
 ### Hash allowlist
 
 Apply `keccak256` algorithm to the list of addresses in `allowlist.json`.
 
 ```bash
-npm run hash
+npm run hash -- -f allowlist-test.json    // default value: allowlist.json
 ```
 
 ### Contract deployment script
