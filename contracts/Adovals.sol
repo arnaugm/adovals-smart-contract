@@ -1,4 +1,13 @@
 // SPDX-License-Identifier: MIT
+
+//    _____       .___                  .__
+//   /  _  \    __| _/_______  _______  |  |   ______
+//  /  /_\  \  / __ |/  _ \  \/ /\__  \ |  |  /  ___/
+// /    |    \/ /_/ (  <_> )   /  / __ \|  |__\___ \
+// \____|__  /\____ |\____/ \_/  (____  /____/____  >
+//         \/      \/                 \/          \/
+
+
 pragma solidity ^0.8.4;
 
 import "erc721a/contracts/ERC721A.sol";
@@ -9,6 +18,7 @@ contract Adovals is ERC721A, Ownable {
     using Strings for uint256;
 
     string baseURI;
+    string public baseExtension = ".json";
     string public notRevealedURI;
     bool public enabled = false;
     bool public inPresale = true;
@@ -51,9 +61,10 @@ contract Adovals is ERC721A, Ownable {
             return notRevealedURI;
         }
 
+        uint256 urlId = tokenId + 1;
         return
             bytes(baseURI).length != 0
-                ? string(abi.encodePacked(baseURI, tokenId.toString()))
+                ? string(abi.encodePacked(baseURI, urlId.toString(), baseExtension))
                 : "";
     }
 

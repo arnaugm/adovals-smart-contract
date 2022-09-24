@@ -111,7 +111,9 @@ describe('Adovals contract', () => {
       hardhatToken.mint(1, []);
       hardhatToken.reveal(true);
 
-      expect(await hardhatToken.tokenURI(0)).to.equal('ipf://base-url.com/0');
+      expect(await hardhatToken.tokenURI(0)).to.equal(
+        'ipf://base-url.com/1.json',
+      );
     });
 
     it('should set the contract as not enabled', async () => {
@@ -188,7 +190,7 @@ describe('Adovals contract', () => {
 
       const uri = await hardhatToken.tokenURI(0);
 
-      expect(uri).to.equal('ipf://base-url.com/0');
+      expect(uri).to.equal('ipf://base-url.com/1.json');
     });
   });
 
@@ -717,7 +719,9 @@ describe('Adovals contract', () => {
       hardhatToken.mint(1, []);
       hardhatToken.reveal(true);
 
-      expect(await hardhatToken.tokenURI(0)).to.equal('http://new-url.com/0');
+      expect(await hardhatToken.tokenURI(0)).to.equal(
+        'http://new-url.com/1.json',
+      );
     });
 
     it('should not change the base URI of the tokens if the caller is not the owner', async () => {
@@ -728,7 +732,9 @@ describe('Adovals contract', () => {
       hardhatToken.mint(1, []);
       hardhatToken.reveal(true);
 
-      expect(await hardhatToken.tokenURI(0)).to.equal('ipf://base-url.com/0');
+      expect(await hardhatToken.tokenURI(0)).to.equal(
+        'ipf://base-url.com/1.json',
+      );
     });
   });
 
