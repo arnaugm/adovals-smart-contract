@@ -12,7 +12,8 @@
     "cost": "node scripts/cost-estimation",
     "hash": "node scripts/hash-allowlist",
     "addrs": "node scripts/address-generator",
-    "merkle-root": "node scripts/compute-merkle-tree"
+    "merkle-root": "node scripts/compute-merkle-tree",
+    "update-merkle-root": "node scripts/update-merkle-root"
   },
   "author": "",
   "license": "ISC",

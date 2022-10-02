@@ -1,0 +1,39 @@
+{
+  "name": "Adovals test #07",
+  "description": "A collection of 1500 hand drawn, randomly generated, unique and limited edition NFT oval face avatars, living on the Ethereum Blockchain!",
+  "image": "ipfs://bafybeihliwc3hohebvgvhkx4udjf7wq2eugzbqsjed5xu5wdigayrqvrku/7.png",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Light Purple"
+    },
+    {
+      "trait_type": "Accessory",
+      "value": "Shovel"
+    },
+    {
+      "trait_type": "Body",
+      "value": "Light Red"
+    },
+    {
+      "trait_type": "Outfit",
+      "value": "Grunge"
+    },
+    {
+      "trait_type": "Hat",
+      "value": "Bear"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Bulbs"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "Lips"
+    },
+    {
+      "trait_type": "Earring",
+      "value": "None"
+    }
+  ]
+}

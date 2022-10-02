@@ -5,7 +5,7 @@ require('dotenv').config();
 require('@nomiclabs/hardhat-waffle');
 require('hardhat-gas-reporter');
 
-const { API_URL, PRIVATE_KEY, REPORT_GAS } = process.env;
+const { API_URL, GOERLI_API_URL, PRIVATE_KEY, REPORT_GAS } = process.env;
 
 module.exports = {
   solidity: '0.8.4',
@@ -16,6 +16,10 @@ module.exports = {
     },
     ropsten: {
       url: API_URL,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
+    goerli: {
+      url: GOERLI_API_URL,
       accounts: [`0x${PRIVATE_KEY}`],
     },
   },

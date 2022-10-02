@@ -6,16 +6,19 @@ const allowlist = require('./allowlist.json');
 const { generateMerkleTree } = require('./merkle-tree');
 
 const localData = {
+  initPromoBaseURI: 'ipf://promo-base-url.com/',
   initBaseURI: 'ipf://base-url.com/',
   initNotRevealedURI: 'ipf://not-revealed-url.com/hidden.json',
 };
 
 const testnetData = {
+  initPromoBaseURI: '',
   initBaseURI: '',
   initNotRevealedURI: '',
 };
 
 const mainnetData = {
+  initPromoBaseURI: '',
   initBaseURI: '',
   initNotRevealedURI: '',
 };
@@ -35,6 +38,7 @@ const main = async () => {
   const adovals = await Adovals.deploy(
     deploymentData.name,
     deploymentData.symbol,
+    deploymentData.initPromoBaseURI,
     deploymentData.initBaseURI,
     deploymentData.initNotRevealedURI,
     merkleRoot,
