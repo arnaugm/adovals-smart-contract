@@ -75,6 +75,7 @@ describe('Adovals contract', () => {
     hardhatToken = await Adovals.deploy(
       'Adovals',
       'ADV',
+      'ipf://promo-base-url.com/',
       'ipf://base-url.com/',
       'ipf://not-revealed-url.com/hidden.json',
       merkleRoot,
@@ -94,6 +95,12 @@ describe('Adovals contract', () => {
       expect(await hardhatToken.symbol()).to.equal('ADV');
     });
 
+    it('should set the right promo base URI', async () => {
+      expect(await hardhatToken.promoBaseURI()).to.equal(
+        'ipf://promo-base-url.com/',
+      );
+    });
+
     it('should set the right not revealed URI', async () => {
       expect(await hardhatToken.notRevealedURI()).to.equal(
         'ipf://not-revealed-url.com/hidden.json',
@@ -106,13 +113,21 @@ describe('Adovals contract', () => {
   });
 
   describe('Initial state', () => {
-    it('should set the base URI of the tokens', async () => {
-      hardhatToken.enable(true);
+    it('should set the promo base URI of the tokens', async () => {
       hardhatToken.mint(1, []);
-      hardhatToken.reveal(true);
 
       expect(await hardhatToken.tokenURI(0)).to.equal(
-        'ipf://base-url.com/1.json',
+        'ipf://promo-base-url.com/1.json',
+      );
+    });
+
+    it('should set the base URI of the tokens', async () => {
+      hardhatToken.setPromoTokens(5);
+      hardhatToken.mint(6, []);
+      hardhatToken.reveal(true);
+
+      expect(await hardhatToken.tokenURI(5)).to.equal(
+        'ipf://base-url.com/6.json',
       );
     });
 
@@ -142,6 +157,10 @@ describe('Adovals contract', () => {
 
     it('should set the max supply to 1500', async () => {
       expect(await hardhatToken.maxSupply()).to.equal(1500);
+    });
+
+    it('should set the promo tokens number to 25', async () => {
+      expect(await hardhatToken.promoTokens()).to.equal(25);
     });
 
     it('should reserve 10 tokens', async () => {
@@ -176,21 +195,32 @@ describe('Adovals contract', () => {
       );
     });
 
-    it('should return the not revealed URI if the state of the tokens is not revealed', async () => {
-      await hardhatToken.mint(1, []);
+    it('should return the not revealed URI if the state of the tokens is not revealed and the requested token is not promotional', async () => {
+      hardhatToken.setPromoTokens(5);
+      await hardhatToken.mint(6, []);
 
-      const uri = await hardhatToken.tokenURI(0);
+      const uri = await hardhatToken.tokenURI(5);
 
       expect(uri).to.equal('ipf://not-revealed-url.com/hidden.json');
     });
 
+    it('should return the promo token URI if the state of the tokens is not revealed and the requested token is promotional', async () => {
+      hardhatToken.setPromoTokens(5);
+      await hardhatToken.mint(6, []);
+
+      const uri = await hardhatToken.tokenURI(4);
+
+      expect(uri).to.equal('ipf://promo-base-url.com/5.json');
+    });
+
     it('should return the token URI if the state of the tokens is revealed', async () => {
+      hardhatToken.setPromoTokens(5);
+      await hardhatToken.mint(6, []);
       hardhatToken.reveal(true);
-      await hardhatToken.mint(1, []);
 
-      const uri = await hardhatToken.tokenURI(0);
+      const uri = await hardhatToken.tokenURI(5);
 
-      expect(uri).to.equal('ipf://base-url.com/1.json');
+      expect(uri).to.equal('ipf://base-url.com/6.json');
     });
   });
 
@@ -543,6 +573,7 @@ describe('Adovals contract', () => {
         hardhatToken = await Adovals.deploy(
           'Adovals',
           'ADV',
+          'ipf://promo-base-url.com/',
           'ipf://base-url.com/',
           'ipf://not-revealed-url.com/hidden.json',
           ownerMerkleRoot,
@@ -712,28 +743,54 @@ describe('Adovals contract', () => {
     });
   });
 
-  describe('#setBaseURI', () => {
-    it('should change the base URI of the tokens', async () => {
-      hardhatToken.setBaseURI('http://new-url.com/');
+  describe('#setPromoBaseURI', () => {
+    it('should change the promo base URI of the tokens', async () => {
+      hardhatToken.setPromoBaseURI('http://new-url.com/');
 
       hardhatToken.mint(1, []);
-      hardhatToken.reveal(true);
 
       expect(await hardhatToken.tokenURI(0)).to.equal(
         'http://new-url.com/1.json',
       );
     });
 
+    it('should not change the promo base URI of the tokens if the caller is not the owner', async () => {
+      await expect(
+        hardhatToken.connect(addr1).setPromoBaseURI('http://new-url.com/'),
+      ).to.be.reverted;
+
+      hardhatToken.mint(1, []);
+
+      expect(await hardhatToken.tokenURI(0)).to.equal(
+        'ipf://promo-base-url.com/1.json',
+      );
+    });
+  });
+
+  describe('#setBaseURI', () => {
+    it('should change the base URI of the tokens', async () => {
+      hardhatToken.setBaseURI('http://new-url.com/');
+      hardhatToken.setPromoTokens(5);
+
+      hardhatToken.mint(6, []);
+      hardhatToken.reveal(true);
+
+      expect(await hardhatToken.tokenURI(5)).to.equal(
+        'http://new-url.com/6.json',
+      );
+    });
+
     it('should not change the base URI of the tokens if the caller is not the owner', async () => {
+      hardhatToken.setPromoTokens(5);
       await expect(
         hardhatToken.connect(addr1).setBaseURI('http://new-url.com/'),
       ).to.be.reverted;
 
-      hardhatToken.mint(1, []);
+      hardhatToken.mint(6, []);
       hardhatToken.reveal(true);
 
-      expect(await hardhatToken.tokenURI(0)).to.equal(
-        'ipf://base-url.com/1.json',
+      expect(await hardhatToken.tokenURI(5)).to.equal(
+        'ipf://base-url.com/6.json',
       );
     });
   });
@@ -836,6 +893,20 @@ describe('Adovals contract', () => {
       await expect(hardhatToken.connect(addr1).setMaxSupply(2000)).to.be
         .reverted;
       expect(await hardhatToken.maxSupply()).to.equal(1500);
+    });
+  });
+
+  describe('#setPromoTokens', () => {
+    it('should set the promoTokens value', async () => {
+      hardhatToken.setPromoTokens(5);
+
+      expect(await hardhatToken.promoTokens()).to.equal(5);
+    });
+
+    it('should not set the promoTokens value if the caller is not the owner', async () => {
+      await expect(hardhatToken.connect(addr1).setPromoTokens(5)).to.be
+        .reverted;
+      expect(await hardhatToken.promoTokens()).to.equal(25);
     });
   });
 

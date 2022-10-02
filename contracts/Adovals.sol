@@ -12,11 +12,13 @@ pragma solidity ^0.8.4;
 
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract Adovals is ERC721A, Ownable {
     using Strings for uint256;
 
+    string public promoBaseURI;
     string baseURI;
     string public baseExtension = ".json";
     string public notRevealedURI;
@@ -26,6 +28,7 @@ contract Adovals is ERC721A, Ownable {
     uint256 public totalPresaleSupply = 0;
     uint256 public presaleMaxSupply = 100;
     uint256 public maxSupply = 1500;
+    uint256 public promoTokens = 25;
     uint256 public reservedTokens = 10;
     uint256 public presaleMaxMintAmount = 2;
     uint256 public saleMaxMintAmount = 10;
@@ -36,10 +39,12 @@ contract Adovals is ERC721A, Ownable {
     constructor(
         string memory name,
         string memory symbol,
+        string memory initPromoBaseURI,
         string memory initBaseURI,
         string memory initNotRevealedURI,
         bytes32 root
     ) ERC721A(name, symbol) {
+        setPromoBaseURI(initPromoBaseURI);
         setBaseURI(initBaseURI);
         setNotRevealedURI(initNotRevealedURI);
         merkleRoot = root;
@@ -57,14 +62,16 @@ contract Adovals is ERC721A, Ownable {
         returns (string memory)
     {
         if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
-        if (!revealed) {
+        if (!revealed && tokenId >= promoTokens) {
             return notRevealedURI;
         }
 
+        string memory currentBaseURI = tokenId < promoTokens ? promoBaseURI : baseURI;
+
         uint256 urlId = tokenId + 1;
         return
-            bytes(baseURI).length != 0
-                ? string(abi.encodePacked(baseURI, urlId.toString(), baseExtension))
+            bytes(currentBaseURI).length != 0
+                ? string(abi.encodePacked(currentBaseURI, urlId.toString(), baseExtension))
                 : "";
     }
 
@@ -133,6 +140,10 @@ contract Adovals is ERC721A, Ownable {
         return MerkleProof.verify(proof, merkleRoot, leaf);
     }
 
+    function setPromoBaseURI(string memory newPromoBaseURI) public onlyOwner {
+        promoBaseURI = newPromoBaseURI;
+    }
+
     function setBaseURI(string memory newBaseURI) public onlyOwner {
         baseURI = newBaseURI;
     }
@@ -162,6 +173,10 @@ contract Adovals is ERC721A, Ownable {
 
     function setMaxSupply(uint256 newMaxSupply) public onlyOwner {
         maxSupply = newMaxSupply;
+    }
+
+    function setPromoTokens(uint256 newPromoTokens) public onlyOwner {
+        promoTokens = newPromoTokens;
     }
 
     function setReservedTokens(uint256 numReserved) public onlyOwner {
