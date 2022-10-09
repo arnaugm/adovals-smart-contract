@@ -3,24 +3,27 @@
  */
 require('dotenv').config();
 require('@nomiclabs/hardhat-waffle');
+require('@nomiclabs/hardhat-etherscan');
 require('hardhat-gas-reporter');
 
-const { API_URL, GOERLI_API_URL, PRIVATE_KEY, REPORT_GAS } = process.env;
+const { PRIVATE_KEY, ETHERSCAN_API_KEY, GOERLI_API_URL, REPORT_GAS } =
+  process.env;
 
 module.exports = {
-  solidity: '0.8.4',
+  solidity: '0.8.17',
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
       chainId: 1337,
     },
-    ropsten: {
-      url: API_URL,
-      accounts: [`0x${PRIVATE_KEY}`],
-    },
     goerli: {
       url: GOERLI_API_URL,
       accounts: [`0x${PRIVATE_KEY}`],
+    },
+  },
+  etherscan: {
+    apiKey: {
+      goerli: ETHERSCAN_API_KEY,
     },
   },
   gasReporter: {

@@ -13,12 +13,14 @@
     "hash": "node scripts/hash-allowlist",
     "addrs": "node scripts/address-generator",
     "merkle-root": "node scripts/compute-merkle-tree",
-    "update-merkle-root": "node scripts/update-merkle-root"
+    "update-merkle-root": "node scripts/update-merkle-root",
+    "update-metadata": "node scripts/update-metadata"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
+    "@nomiclabs/hardhat-etherscan": "^3.1.0",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "chai": "^4.3.6",
     "erc721a": "^3.3.0",

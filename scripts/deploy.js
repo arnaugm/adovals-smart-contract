@@ -12,9 +12,12 @@ const localData = {
 };
 
 const testnetData = {
-  initPromoBaseURI: '',
-  initBaseURI: '',
-  initNotRevealedURI: '',
+  initPromoBaseURI:
+    'ipfs://bafybeidfwrfawpqvlvewvqwyfnn2giaqhspz47s3yiwzab4lqnj5sn4544/',
+  initBaseURI:
+    'ipfs://bafybeiggkptmm5fkhpqdgquziqitbmmca7k36do7imswij6x2jakgt53zm/',
+  initNotRevealedURI:
+    'ipfs://bafkreih3n6zuxwyjhchapilnhk4t3fit4tohyvmft2cvuvjchjwgqkcw6q',
 };
 
 const mainnetData = {
@@ -24,9 +27,9 @@ const mainnetData = {
 };
 
 const deploymentData = {
-  name: 'Adovals',
-  symbol: 'ADV',
-  ...localData,
+  name: 'Adovals-goerli',
+  symbol: 'ADG',
+  ...testnetData,
 };
 
 const main = async () => {
