@@ -10,7 +10,15 @@ const { PRIVATE_KEY, ETHERSCAN_API_KEY, GOERLI_API_URL, REPORT_GAS } =
   process.env;
 
 module.exports = {
-  solidity: '0.8.17',
+  solidity: {
+    version: '0.8.17',
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    },
+  },
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
