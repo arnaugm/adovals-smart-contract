@@ -7,7 +7,6 @@
 // \____|__  /\____ |\____/ \_/  (____  /____/____  >
 //         \/      \/                 \/          \/
 
-
 pragma solidity ^0.8.4;
 
 import "erc721a/contracts/ERC721A.sol";
@@ -66,11 +65,19 @@ contract Adovals is ERC721A, Ownable {
             return notRevealedURI;
         }
 
-        string memory currentBaseURI = tokenId < promoTokens ? promoBaseURI : baseURI;
+        string memory currentBaseURI = tokenId < promoTokens
+            ? promoBaseURI
+            : baseURI;
 
         return
             bytes(currentBaseURI).length != 0
-                ? string(abi.encodePacked(currentBaseURI, tokenId.toString(), baseExtension))
+                ? string(
+                    abi.encodePacked(
+                        currentBaseURI,
+                        tokenId.toString(),
+                        baseExtension
+                    )
+                )
                 : "";
     }
 
