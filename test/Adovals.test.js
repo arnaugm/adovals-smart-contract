@@ -191,7 +191,7 @@ describe('Adovals contract', () => {
   describe('#tokenURI', () => {
     it('should raise an error if the requested token is not minted', async () => {
       await expect(hardhatToken.tokenURI(0)).to.be.revertedWith(
-        "reverted with custom error 'URIQueryForNonexistentToken()'",
+        'URIQueryForNonexistentToken',
       );
     });
 
