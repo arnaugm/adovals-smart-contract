@@ -68,10 +68,9 @@ contract Adovals is ERC721A, Ownable {
 
         string memory currentBaseURI = tokenId < promoTokens ? promoBaseURI : baseURI;
 
-        uint256 urlId = tokenId + 1;
         return
             bytes(currentBaseURI).length != 0
-                ? string(abi.encodePacked(currentBaseURI, urlId.toString(), baseExtension))
+                ? string(abi.encodePacked(currentBaseURI, tokenId.toString(), baseExtension))
                 : "";
     }
 

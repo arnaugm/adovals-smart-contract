@@ -1,39 +1,39 @@
 {
   "name": "Adovals-goerli #5",
   "description": "A collection of 1500 hand drawn, randomly generated, unique and limited edition NFT oval face avatars, living on the Ethereum Blockchain!",
-  "image": "ipfs://bafybeieywzrzfnljsw5widzxi6tqdsilam6dj7ssdz7r6l2zsdtr26tvby/5.png",
+  "image": "ipfs://bafybeig5ncn75o5guwdttkl3dunivhvthkyb3hnigx5vomx5fjt23lvrve/5.png",
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "Blue"
+      "value": "Beige"
     },
     {
       "trait_type": "Accessory",
-      "value": "Robot Arms"
+      "value": "Shovel"
     },
     {
       "trait_type": "Body",
-      "value": "Blue"
+      "value": "Black"
     },
     {
       "trait_type": "Outfit",
-      "value": "Suit"
+      "value": "Sheriff"
     },
     {
       "trait_type": "Hat",
-      "value": "Connect"
+      "value": "Pirate"
     },
     {
       "trait_type": "Eyes",
-      "value": "Like"
+      "value": "Square"
     },
     {
       "trait_type": "Mouth",
-      "value": "Candy"
+      "value": "Sad"
     },
     {
       "trait_type": "Earring",
-      "value": "Left"
+      "value": "Right"
     }
   ]
 }

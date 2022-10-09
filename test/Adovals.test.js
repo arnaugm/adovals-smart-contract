@@ -114,10 +114,23 @@ describe('Adovals contract', () => {
 
   describe('Initial state', () => {
     it('should set the promo base URI of the tokens', async () => {
-      hardhatToken.mint(1, []);
+      hardhatToken.setPromoTokens(5);
+      hardhatToken.mint(6, []);
 
       expect(await hardhatToken.tokenURI(0)).to.equal(
-        'ipf://promo-base-url.com/1.json',
+        'ipf://promo-base-url.com/0.json',
+      );
+      expect(await hardhatToken.tokenURI(4)).to.equal(
+        'ipf://promo-base-url.com/4.json',
+      );
+    });
+
+    it('should set the not revealed URI of the tokens after the promotion ones', async () => {
+      hardhatToken.setPromoTokens(5);
+      hardhatToken.mint(6, []);
+
+      expect(await hardhatToken.tokenURI(5)).to.equal(
+        'ipf://not-revealed-url.com/hidden.json',
       );
     });
 
@@ -127,7 +140,7 @@ describe('Adovals contract', () => {
       hardhatToken.reveal(true);
 
       expect(await hardhatToken.tokenURI(5)).to.equal(
-        'ipf://base-url.com/6.json',
+        'ipf://base-url.com/5.json',
       );
     });
 
@@ -210,7 +223,7 @@ describe('Adovals contract', () => {
 
       const uri = await hardhatToken.tokenURI(4);
 
-      expect(uri).to.equal('ipf://promo-base-url.com/5.json');
+      expect(uri).to.equal('ipf://promo-base-url.com/4.json');
     });
 
     it('should return the token URI if the state of the tokens is revealed', async () => {
@@ -220,7 +233,7 @@ describe('Adovals contract', () => {
 
       const uri = await hardhatToken.tokenURI(5);
 
-      expect(uri).to.equal('ipf://base-url.com/6.json');
+      expect(uri).to.equal('ipf://base-url.com/5.json');
     });
   });
 
@@ -750,7 +763,7 @@ describe('Adovals contract', () => {
       hardhatToken.mint(1, []);
 
       expect(await hardhatToken.tokenURI(0)).to.equal(
-        'http://new-url.com/1.json',
+        'http://new-url.com/0.json',
       );
     });
 
@@ -762,7 +775,7 @@ describe('Adovals contract', () => {
       hardhatToken.mint(1, []);
 
       expect(await hardhatToken.tokenURI(0)).to.equal(
-        'ipf://promo-base-url.com/1.json',
+        'ipf://promo-base-url.com/0.json',
       );
     });
   });
@@ -776,7 +789,7 @@ describe('Adovals contract', () => {
       hardhatToken.reveal(true);
 
       expect(await hardhatToken.tokenURI(5)).to.equal(
-        'http://new-url.com/6.json',
+        'http://new-url.com/5.json',
       );
     });
 
@@ -790,7 +803,7 @@ describe('Adovals contract', () => {
       hardhatToken.reveal(true);
 
       expect(await hardhatToken.tokenURI(5)).to.equal(
-        'ipf://base-url.com/6.json',
+        'ipf://base-url.com/5.json',
       );
     });
   });
