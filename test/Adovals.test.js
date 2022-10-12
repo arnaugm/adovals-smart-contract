@@ -724,6 +724,45 @@ describe('Adovals contract', () => {
     });
   });
 
+  describe('#mintForAddress', async () => {
+    it('should not mint if the caller is not the owner', async () => {
+      await expect(
+        hardhatToken.connect(addr1).mintForAddress(1, addr3.address),
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('should not mint if the amount is not provided', async () => {
+      await expect(hardhatToken.mintForAddress(null, addr3.address)).to.be
+        .reverted;
+    });
+
+    it('should not mint if receiver address is not provided', async () => {
+      await expect(hardhatToken.mintForAddress(2, null)).to.be.reverted;
+    });
+
+    it('should not mint if the amount is 0', async () => {
+      await expect(
+        hardhatToken.mintForAddress(0, addr3.address),
+      ).to.be.revertedWith('A mint amount bigger than 0 needs to be provided');
+    });
+
+    it('should not mint if there are not enough tokens left', async () => {
+      hardhatToken.setMaxSupply(1);
+
+      await expect(
+        hardhatToken.mintForAddress(2, addr3.address),
+      ).to.be.revertedWith('There are not enough tokens left');
+    });
+
+    it('should mint for the given address the amount of tokens specified', async () => {
+      expect(await hardhatToken.totalSupply()).to.equal(0);
+      await expect(hardhatToken.mintForAddress(2, addr3.address)).not.to.be
+        .reverted;
+      expect(await hardhatToken.totalSupply()).to.equal(2);
+      expect(await hardhatToken.balanceOf(addr3.address)).to.equal(2);
+    });
+  });
+
   describe('#isValid', async () => {
     it('should return true if the merkle proof is verified', async () => {
       const leaf = keccak256(addr1.address);

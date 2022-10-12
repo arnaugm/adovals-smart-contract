@@ -81,11 +81,7 @@ contract Adovals is ERC721A, Ownable {
                 : "";
     }
 
-    function mint(uint256 mintAmount, bytes32[] memory proof) external payable {
-        if (msg.sender != owner()) {
-            require(enabled, "The contract is not enabled");
-        }
-
+    modifier mintReq(uint256 mintAmount) {
         require(
             mintAmount > 0,
             "A mint amount bigger than 0 needs to be provided"
@@ -94,8 +90,12 @@ contract Adovals is ERC721A, Ownable {
             totalSupply() + mintAmount <= maxSupply,
             "There are not enough tokens left"
         );
+        _;
+    }
 
+    function mint(uint256 mintAmount, bytes32[] memory proof) external mintReq(mintAmount) payable {
         if (msg.sender != owner()) {
+            require(enabled, "The contract is not enabled");
             require(
                 !inPresale ||
                     isValid(proof, keccak256(abi.encodePacked(msg.sender))),
@@ -130,12 +130,17 @@ contract Adovals is ERC721A, Ownable {
                 msg.value >= presaleCost * mintAmount,
                 "Not enough ether is sent for the purchase"
             );
+
+            if (inPresale) {
+                totalPresaleSupply = totalPresaleSupply + mintAmount;
+            }
         }
 
-        if (inPresale && msg.sender != owner()) {
-            totalPresaleSupply = totalPresaleSupply + mintAmount;
-        }
         _safeMint(msg.sender, mintAmount);
+    }
+
+    function mintForAddress(uint256 mintAmount, address receiver) public mintReq(mintAmount) onlyOwner {
+        _safeMint(receiver, mintAmount);
     }
 
     function isValid(bytes32[] memory proof, bytes32 leaf)
