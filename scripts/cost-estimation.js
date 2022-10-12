@@ -35,15 +35,15 @@ const getEth2UsdConversionRate = () =>
     });
 
 const getEstimation = async (gasUsed) => {
-  const gasPrice = await getGasPrice();
+  const gasPriceGwei = await getGasPrice();
 
-  const safeGasPrice = gasUsed * gasPrice.SafeGasPrice;
-  const proposeGasPrice = gasUsed * gasPrice.ProposeGasPrice;
-  const fastGasPrice = gasUsed * gasPrice.FastGasPrice;
+  const safeGasPriceGwei = gasUsed * gasPriceGwei.SafeGasPrice;
+  const proposeGasPriceGwei = gasUsed * gasPriceGwei.ProposeGasPrice;
+  const fastGasPriceGwei = gasUsed * gasPriceGwei.FastGasPrice;
 
-  const costSafeGasPriceInEth = safeGasPrice / 1000000000;
-  const costProposeGasPriceInEth = proposeGasPrice / 1000000000;
-  const costFastGasPriceInEth = fastGasPrice / 1000000000;
+  const costSafeGasPriceInEth = safeGasPriceGwei / 1000000000;
+  const costProposeGasPriceInEth = proposeGasPriceGwei / 1000000000;
+  const costFastGasPriceInEth = fastGasPriceGwei / 1000000000;
 
   console.log('/***** Ether *****/');
   console.log(`Safe: ${costSafeGasPriceInEth.toFixed(10)} ETH`);
@@ -58,9 +58,9 @@ const getEstimation = async (gasUsed) => {
 
   console.log('');
   console.log('/***** USD *****/');
-  console.log(`Safe: ${costSafeGasPriceInUsd.toFixed(2)}$`);
-  console.log(`Proposed: ${costProposeGasPriceInUsd.toFixed(2)}$`);
-  console.log(`Fast: ${costFastGasPriceInUsd.toFixed(2)}$`);
+  console.log(`Safe: $${costSafeGasPriceInUsd.toFixed(2)}`);
+  console.log(`Proposed: $${costProposeGasPriceInUsd.toFixed(2)}`);
+  console.log(`Fast: $${costFastGasPriceInUsd.toFixed(2)}`);
 };
 
 getEstimation(argv.g);
