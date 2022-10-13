@@ -38,6 +38,14 @@ Apply `keccak256` algorithm to the list of addresses in `allowlist.json`.
 npm run hash -- -f allowlist-test.json    // default value: allowlist.json
 ```
 
+### Update metadata
+
+Update metadata assuming folders for promo and general tokens, the content is defined in the script
+
+```bash
+npm run update-metadata
+```
+
 ### Contract deployment script
 
 Deploy the contract to a local Hardhat Network.
@@ -51,17 +59,35 @@ npx hardhat run scripts/deploy.js --network localhost
 * Enable the contract after being deployed to the hardhat network
 
 ```bash
-npx hardhat run --network localhost ./scripts/enable.js 
+npx hardhat run --network localhost ./scripts/enable.js
 ```
 
 * Set the contract in public mint state
 
 ```bash
-npx hardhat run --network localhost ./scripts/not-presale.js 
+npx hardhat run --network localhost ./scripts/not-presale.js
 ```
 
 * Set the contract in presale state
 
 ```bash
-npx hardhat run --network localhost ./scripts/presale.js 
+npx hardhat run --network localhost ./scripts/presale.js
+```
+
+* Mint tokens as owner (specify amount in the script)
+
+```bash
+npx hardhat run --network localhost ./scripts/mint.js
+```
+
+* Return number of minted tokens
+
+```bash
+npx hardhat run --network localhost ./scripts/total-supply.js
+```
+
+* Update the value of the merkle root
+
+```bash
+npx hardhat run --network localhost ./scripts/update-merkle-root.js
 ```

@@ -13,7 +13,6 @@
     "hash": "node scripts/hash-allowlist",
     "addrs": "node scripts/address-generator",
     "merkle-root": "node scripts/compute-merkle-tree",
-    "update-merkle-root": "node scripts/update-merkle-root",
     "update-metadata": "node scripts/update-metadata"
   },
   "author": "",
