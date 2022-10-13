@@ -18,7 +18,7 @@ contract Adovals is ERC721A, Ownable {
     using Strings for uint256;
 
     string public promoBaseURI;
-    string baseURI;
+    string internal baseURI;
     string public baseExtension = ".json";
     string public notRevealedURI;
     bool public enabled = false;
@@ -49,38 +49,6 @@ contract Adovals is ERC721A, Ownable {
         merkleRoot = root;
     }
 
-    function _baseURI() internal view virtual override returns (string memory) {
-        return baseURI;
-    }
-
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        virtual
-        override
-        returns (string memory)
-    {
-        if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
-        if (!revealed && tokenId >= promoTokens) {
-            return notRevealedURI;
-        }
-
-        string memory currentBaseURI = tokenId < promoTokens
-            ? promoBaseURI
-            : baseURI;
-
-        return
-            bytes(currentBaseURI).length != 0
-                ? string(
-                    abi.encodePacked(
-                        currentBaseURI,
-                        tokenId.toString(),
-                        baseExtension
-                    )
-                )
-                : "";
-    }
-
     modifier mintReq(uint256 mintAmount) {
         require(
             mintAmount > 0,
@@ -93,7 +61,11 @@ contract Adovals is ERC721A, Ownable {
         _;
     }
 
-    function mint(uint256 mintAmount, bytes32[] memory proof) external mintReq(mintAmount) payable {
+    function mint(uint256 mintAmount, bytes32[] memory proof)
+        external
+        payable
+        mintReq(mintAmount)
+    {
         if (msg.sender != owner()) {
             require(enabled, "The contract is not enabled");
             require(
@@ -139,8 +111,40 @@ contract Adovals is ERC721A, Ownable {
         _safeMint(msg.sender, mintAmount);
     }
 
-    function mintForAddress(uint256 mintAmount, address receiver) public mintReq(mintAmount) onlyOwner {
+    function mintForAddress(uint256 mintAmount, address receiver)
+        public
+        mintReq(mintAmount)
+        onlyOwner
+    {
         _safeMint(receiver, mintAmount);
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
+        if (!revealed && tokenId >= promoTokens) {
+            return notRevealedURI;
+        }
+
+        string memory currentBaseURI = tokenId < promoTokens
+            ? promoBaseURI
+            : baseURI;
+
+        return
+            bytes(currentBaseURI).length != 0
+                ? string(
+                    abi.encodePacked(
+                        currentBaseURI,
+                        tokenId.toString(),
+                        baseExtension
+                    )
+                )
+                : "";
     }
 
     function isValid(bytes32[] memory proof, bytes32 leaf)
@@ -225,5 +229,9 @@ contract Adovals is ERC721A, Ownable {
             ""
         );
         require(success, "Failure withdrawing Ether");
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return baseURI;
     }
 }
