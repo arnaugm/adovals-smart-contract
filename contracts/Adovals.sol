@@ -7,7 +7,7 @@
 // \____|__  /\____ |\____/ \_/  (____  /____/____  >
 //         \/      \/                 \/          \/
 
-pragma solidity ^0.8.4;
+pragma solidity 0.8.17;
 
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
