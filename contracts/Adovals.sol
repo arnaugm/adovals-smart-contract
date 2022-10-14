@@ -61,7 +61,7 @@ contract Adovals is ERC721A, Ownable {
         _;
     }
 
-    function mint(uint256 mintAmount, bytes32[] memory proof)
+    function mint(uint256 mintAmount, bytes32[] calldata proof)
         external
         payable
         mintReq(mintAmount)
