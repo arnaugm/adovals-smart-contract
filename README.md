@@ -86,7 +86,7 @@ npx hardhat run --network localhost ./scripts/mint.js
 npx hardhat run --network localhost ./scripts/total-supply.js
 ```
 
-* Update the value of the merkle root
+* Update the value of the merkle root (specify value in the script)
 
 ```bash
 npx hardhat run --network localhost ./scripts/update-merkle-root.js

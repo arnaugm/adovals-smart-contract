@@ -19,6 +19,7 @@ contract Adovals is ERC721A, Ownable {
 
     string public promoBaseURI;
     string internal baseURI;
+    string internal reservedURI;
     string public baseExtension = ".json";
     string public notRevealedURI;
     bool public enabled = false;
@@ -40,11 +41,13 @@ contract Adovals is ERC721A, Ownable {
         string memory symbol,
         string memory initPromoBaseURI,
         string memory initBaseURI,
+        string memory initReservedURI,
         string memory initNotRevealedURI,
         bytes32 root
     ) ERC721A(name, symbol) {
         setPromoBaseURI(initPromoBaseURI);
         setBaseURI(initBaseURI);
+        setReservedURI(initReservedURI);
         setNotRevealedURI(initNotRevealedURI);
         merkleRoot = root;
     }
@@ -135,6 +138,10 @@ contract Adovals is ERC721A, Ownable {
             ? promoBaseURI
             : baseURI;
 
+        currentBaseURI = tokenId < maxSupply - reservedTokens
+        ? currentBaseURI
+        : reservedURI;
+
         return
             bytes(currentBaseURI).length != 0
                 ? string(
@@ -161,6 +168,10 @@ contract Adovals is ERC721A, Ownable {
 
     function setBaseURI(string memory newBaseURI) public onlyOwner {
         baseURI = newBaseURI;
+    }
+
+    function setReservedURI(string memory newReservedURI) public onlyOwner {
+        reservedURI = newReservedURI;
     }
 
     function setNotRevealedURI(string memory newNotRevealedURI)

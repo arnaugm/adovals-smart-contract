@@ -77,6 +77,7 @@ describe('Adovals contract', () => {
       'ADV',
       'ipf://promo-base-url.com/',
       'ipf://base-url.com/',
+      'ipf://reserved-url.com/',
       'ipf://not-revealed-url.com/hidden.json',
       merkleRoot,
     );
@@ -141,6 +142,18 @@ describe('Adovals contract', () => {
 
       expect(await hardhatToken.tokenURI(5)).to.equal(
         'ipf://base-url.com/5.json',
+      );
+    });
+
+    it('should set the reserved tokens URI', async () => {
+      hardhatToken.setMaxSupply(5);
+      hardhatToken.setPromoTokens(1);
+      hardhatToken.setReservedTokens(1);
+      hardhatToken.mint(5, []);
+      hardhatToken.reveal(true);
+
+      expect(await hardhatToken.tokenURI(4)).to.equal(
+        'ipf://reserved-url.com/4.json',
       );
     });
 
@@ -234,6 +247,29 @@ describe('Adovals contract', () => {
       const uri = await hardhatToken.tokenURI(5);
 
       expect(uri).to.equal('ipf://base-url.com/5.json');
+    });
+
+    it('should return the reserved token URI if the state of the tokens is revealed and the requested token is reserved', async () => {
+      hardhatToken.setMaxSupply(5);
+      hardhatToken.setPromoTokens(1);
+      hardhatToken.setReservedTokens(1);
+      await hardhatToken.mint(5, []);
+      hardhatToken.reveal(true);
+
+      const uri = await hardhatToken.tokenURI(4);
+
+      expect(uri).to.equal('ipf://reserved-url.com/4.json');
+    });
+
+    it('should return the not revealed URI if the state of the tokens is not revealed and the requested token is not reserved', async () => {
+      hardhatToken.setMaxSupply(5);
+      hardhatToken.setPromoTokens(1);
+      hardhatToken.setReservedTokens(1);
+      await hardhatToken.mint(5, []);
+
+      const uri = await hardhatToken.tokenURI(4);
+
+      expect(uri).to.equal('ipf://not-revealed-url.com/hidden.json');
     });
   });
 
@@ -588,6 +624,7 @@ describe('Adovals contract', () => {
           'ADV',
           'ipf://promo-base-url.com/',
           'ipf://base-url.com/',
+          'ipf://reserved-url.com/',
           'ipf://not-revealed-url.com/hidden.json',
           ownerMerkleRoot,
         );
@@ -843,6 +880,39 @@ describe('Adovals contract', () => {
 
       expect(await hardhatToken.tokenURI(5)).to.equal(
         'ipf://base-url.com/5.json',
+      );
+    });
+  });
+
+  describe('#setReservedURI', () => {
+    it('should change the reserved URI', async () => {
+      hardhatToken.setReservedURI('http://new-reserved-url.com/');
+      hardhatToken.setMaxSupply(5);
+      hardhatToken.setPromoTokens(1);
+      hardhatToken.setReservedTokens(1);
+      hardhatToken.mint(5, []);
+      hardhatToken.reveal(true);
+
+      expect(await hardhatToken.tokenURI(4)).to.equal(
+        'http://new-reserved-url.com/4.json',
+      );
+    });
+
+    it('should not change the reserved URI if the caller is not the owner', async () => {
+      hardhatToken.setMaxSupply(5);
+      hardhatToken.setPromoTokens(1);
+      hardhatToken.setReservedTokens(1);
+      await expect(
+        hardhatToken
+          .connect(addr1)
+          .setReservedURI('http://new-reserved-url.com/'),
+      ).to.be.reverted;
+
+      hardhatToken.mint(5, []);
+      hardhatToken.reveal(true);
+
+      expect(await hardhatToken.tokenURI(4)).to.equal(
+        'ipf://reserved-url.com/4.json',
       );
     });
   });

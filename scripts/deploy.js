@@ -8,6 +8,7 @@ const { generateMerkleTree } = require('./merkle-tree');
 const localData = {
   initPromoBaseURI: 'ipf://promo-base-url.com/',
   initBaseURI: 'ipf://base-url.com/',
+  initReservedURI: 'ipf://reserved-url.com/',
   initNotRevealedURI: 'ipf://not-revealed-url.com/hidden.json',
 };
 
@@ -16,6 +17,7 @@ const testnetData = {
     'ipfs://bafybeidfwrfawpqvlvewvqwyfnn2giaqhspz47s3yiwzab4lqnj5sn4544/',
   initBaseURI:
     'ipfs://bafybeiggkptmm5fkhpqdgquziqitbmmca7k36do7imswij6x2jakgt53zm/',
+  initReservedURI: 'ipf://reserved-url.com/',
   initNotRevealedURI:
     'ipfs://bafkreih3n6zuxwyjhchapilnhk4t3fit4tohyvmft2cvuvjchjwgqkcw6q',
 };
@@ -23,6 +25,7 @@ const testnetData = {
 const mainnetData = {
   initPromoBaseURI: '',
   initBaseURI: '',
+  initReservedURI: '',
   initNotRevealedURI: '',
 };
 
@@ -43,6 +46,7 @@ const main = async () => {
     deploymentData.symbol,
     deploymentData.initPromoBaseURI,
     deploymentData.initBaseURI,
+    deploymentData.initReservedURI,
     deploymentData.initNotRevealedURI,
     merkleRoot,
   );

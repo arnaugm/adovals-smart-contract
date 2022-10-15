@@ -9,7 +9,7 @@ const mint = async () => {
   const Adovals = await ethers.getContractFactory('Adovals');
   const contract = await Adovals.attach(address);
 
-  const amount = 1;
+  const amount = 10;
 
   const result = await contract.mint(amount, []);
   console.log(result);
