@@ -16,6 +16,7 @@ const reservedImageBaseURI = 'ipfs://xxxx/';
 
 const promoBasePath = `${process.cwd()}/test-assets/promo-metadata/`;
 const basePath = `${process.cwd()}/test-assets/metadata/`;
+const reservedBasePath = `${process.cwd()}/test-assets/reserved-metadata/`;
 
 const updateMetadata = (path) => {
   const files = fs.readdirSync(path);
@@ -42,3 +43,4 @@ const updateMetadata = (path) => {
 
 updateMetadata(promoBasePath);
 updateMetadata(basePath);
+updateMetadata(reservedBasePath);
