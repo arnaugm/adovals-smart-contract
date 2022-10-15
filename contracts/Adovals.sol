@@ -25,7 +25,7 @@ contract Adovals is ERC721A, Ownable {
     bool public inPresale = true;
     bool public revealed = false;
     uint256 public totalPresaleSupply = 0;
-    uint256 public presaleMaxSupply = 100;
+    uint256 public presaleMaxSupply = 200;
     uint256 public maxSupply = 1500;
     uint256 public promoTokens = 25;
     uint256 public reservedTokens = 10;
