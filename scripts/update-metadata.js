@@ -2,17 +2,31 @@
 
 const fs = require('fs');
 
-const name = 'Adovals-goerli';
-const description =
-  'A collection of 1500 hand drawn, randomly generated, unique and limited edition NFT oval face avatars, living on the Ethereum Blockchain!';
-const totalTokens = 15;
-const promoTokens = 5;
-const reservedTokens = 1;
-const promoImageBaseURI =
-  'ipfs://bafybeieywzrzfnljsw5widzxi6tqdsilam6dj7ssdz7r6l2zsdtr26tvby/';
-const imageBaseURI =
-  'ipfs://bafybeig5ncn75o5guwdttkl3dunivhvthkyb3hnigx5vomx5fjt23lvrve/';
-const reservedImageBaseURI = 'ipfs://xxxx/';
+const prodMetadata = {
+  name: 'Adovals',
+  description:
+    'A collection of 1500 hand drawn, randomly generated, unique and limited edition NFT oval face avatars, living on the Ethereum Blockchain! The latest publications will be the rarest! Pintamones is the artist behind each of these funny characters, created with a lot of love. This project is carried out by a team of 3 people and we have created a smart contract solely for this collection. 15% of the profits from this project will go to Social Foundations in Barcelona.',
+  totalTokens: 1500,
+  promoTokens: 25,
+  reservedTokens: 10,
+  promoImageBaseURI: 'ipfs://xxx/',
+  imageBaseURI: 'ipfs://xxx/',
+  reservedImageBaseURI: 'ipfs://xxxx/',
+};
+
+const testMetadata = {
+  name: 'Adovals-goerli',
+  description:
+    'A collection of 1500 hand drawn, randomly generated, unique and limited edition NFT oval face avatars, living on the Ethereum Blockchain!',
+  totalTokens: 15,
+  promoTokens: 5,
+  reservedTokens: 1,
+  promoImageBaseURI: 'ipfs://xxx/',
+  imageBaseURI: 'ipfs://xxx/',
+  reservedImageBaseURI: 'ipfs://xxxx/',
+};
+
+const metadata = prodMetadata;
 
 const promoBasePath = `${process.cwd()}/test-assets/promo-metadata/`;
 const basePath = `${process.cwd()}/test-assets/metadata/`;
@@ -25,13 +39,18 @@ const updateMetadata = (path) => {
     const data = fs.readFileSync(path + fileName);
     const item = JSON.parse(data);
     const itemNum = parseInt(fileName.replace('.json', ''), 10);
-    let imageURI = itemNum < promoTokens ? promoImageBaseURI : imageBaseURI;
+    let imageURI =
+      itemNum < metadata.promoTokens
+        ? metadata.promoImageBaseURI
+        : metadata.imageBaseURI;
     imageURI =
-      itemNum < totalTokens - reservedTokens ? imageURI : reservedImageBaseURI;
+      itemNum < metadata.totalTokens - metadata.reservedTokens
+        ? imageURI
+        : metadata.reservedImageBaseURI;
 
     const newItem = {
-      name: `${name} #${itemNum}`,
-      description,
+      name: `${metadata.name} #${itemNum}`,
+      description: metadata.description,
       image: `${imageURI + itemNum}.png`,
       attributes: item.attributes,
     };
