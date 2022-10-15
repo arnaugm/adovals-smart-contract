@@ -177,8 +177,8 @@ describe('Adovals contract', () => {
       expect(await hardhatToken.totalSupply()).to.equal(0);
     });
 
-    it('should set the presale max supply to 100', async () => {
-      expect(await hardhatToken.presaleMaxSupply()).to.equal(100);
+    it('should set the presale max supply to 200', async () => {
+      expect(await hardhatToken.presaleMaxSupply()).to.equal(200);
     });
 
     it('should set the max supply to 1500', async () => {
@@ -992,15 +992,15 @@ describe('Adovals contract', () => {
 
   describe('#setPresaleMaxSupply', () => {
     it('should set the presaleMaxSupply value', async () => {
-      hardhatToken.setPresaleMaxSupply(110);
+      hardhatToken.setPresaleMaxSupply(210);
 
-      expect(await hardhatToken.presaleMaxSupply()).to.equal(110);
+      expect(await hardhatToken.presaleMaxSupply()).to.equal(210);
     });
 
     it('should not set the presaleMaxSupply value if the caller is not the owner', async () => {
-      await expect(hardhatToken.connect(addr1).setPresaleMaxSupply(110)).to.be
+      await expect(hardhatToken.connect(addr1).setPresaleMaxSupply(210)).to.be
         .reverted;
-      expect(await hardhatToken.presaleMaxSupply()).to.equal(100);
+      expect(await hardhatToken.presaleMaxSupply()).to.equal(200);
     });
   });
 

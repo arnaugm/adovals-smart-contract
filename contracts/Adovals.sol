@@ -138,8 +138,8 @@ contract Adovals is ERC721A, Ownable {
             : baseURI;
 
         currentBaseURI = tokenId < maxSupply - reservedTokens
-        ? currentBaseURI
-        : reservedURI;
+            ? currentBaseURI
+            : reservedURI;
 
         return
             bytes(currentBaseURI).length != 0
