@@ -4,6 +4,7 @@
 # compilation
 /artifacts
 /cache
+/scripts/allowlist.json
 
 # misc
 .env
